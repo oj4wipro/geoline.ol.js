@@ -13,11 +13,11 @@
   "style": "dist/geoline.ol.js/geoline.ol.css",
   "targets": {
     "geoline.ol.js": {
-		"distDir": "dist/geoline.ol.js"
-	},
+      "distDir": "dist/geoline.ol.js"
+    },
     "examples": {
-		"distDir": "dist/examples"
-	}
+      "distDir": "dist/examples"
+    }
   },
   "dependencies": {
     "jquery": ">=1.9.0",
@@ -26,9 +26,9 @@
   },
   "devDependencies": {
     "cross-var": "^1.1.0",
-    "jsdoc": "^3.6.6",
-    "parcel": "^2.0.0-beta.1",
-    "replace": "^1.2.0"
+    "jsdoc": "^4.0.4",
+    "parcel": "^2.15.2",
+    "replace": "^1.2.2"
   },
   "repository": {
     "type": "git",
@@ -39,8 +39,8 @@
     "start-dev": "parcel examples/example.html examples/testdata/**/*",
     "audit": "npm audit --only=prod",
     "build-js": "parcel build src/geoline.ol.js --target geoline.ol.js --no-scope-hoist --no-cache && cross-var replace '@version@' $npm_package_version dist/geoline.ol.js/geoline.ol.js && cross-var replace '@version@' $npm_package_version dist/geoline.ol.js/geoline.ol.js",
-	"build-css": "parcel build src/geoline.ol.css --target geoline.ol.js --no-scope-hoist --no-cache",
-	"build-examples": "parcel build examples/example*.html --no-content-hash --no-scope-hoist --no-cache --public-url '.' --target examples && cross-var replace '@version@' $npm_package_version dist/examples/example.html",
+    "build-css": "parcel build src/geoline.ol.css --target geoline.ol.js --no-scope-hoist --no-cache",
+    "build-examples": "parcel build examples/example*.html --no-content-hash --no-scope-hoist --no-cache --public-url '.' --target examples && cross-var replace '@version@' $npm_package_version dist/examples/example.html",
     "build-doc": "jsdoc -c jssdocconfig.json && cross-var replace '>Home</h1>' '>Version $npm_package_version</h1>' dist/doc/index.html",
     "build": "npm run build-js && npm run build-css && npm run build-examples && npm run build-doc"
   }
