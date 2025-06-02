@@ -8,7 +8,7 @@ import styleStroke from "ol/style/Stroke";
 import styleStyle from "ol/style/Style";
 
 import example_25832JSON from "url:./testdata/example_25832.json"
-import example_4326JSON from "url:./testdata/example_4326.json"
+import example_4326JSON from "./testdata/example_4326.json"
 
 var mymap;
 $(function() {

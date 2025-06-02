@@ -1,4 +1,4 @@
-@import url("ol/ol.css");
+@import url("../node_modules/ol/ol.css");
 
 body {
 	font-family: sans-serif;
