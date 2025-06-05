@@ -84,18 +84,19 @@ var stma_openlayers = /** @class */ (function () {
 				async: false,
 				cache: false,
 				success: function (_data) {
-					
-					_data.ags_hosts = $.map(_data.ags_services, function(item){
-						return item.ags_host;
-					});
-					
-					_data.wmts_hosts = $.map(_data.wmts_services, function(item){
-						return item.host;
-					});
-					
-					_data.wms_hosts = $.map(_data.wms_services, function(item){
-						return item.host;
-					});
+
+					_data.ags_hosts = Array.isArray(_data.ags_services)
+						? _data.ags_services.map(item => item.ags_host)
+						: Object.values(_data.ags_services || {}).map(item => item.ags_host);
+
+					_data.wmts_hosts = Array.isArray(_data.wmts_services)
+						? _data.wmts_services.map(item => item.host)
+						: Object.values(_data.wmts_services || {}).map(item => item.host);
+
+					_data.wms_hosts = Array.isArray(_data.wms_services)
+						? _data.wms_services.map(item => item.host)
+						: Object.values(_data.wms_services || {}).map(item => item.host);
+
 					config = _data;
 				},
 				error: function (xhr, status) {
@@ -153,7 +154,7 @@ var stma_openlayers = /** @class */ (function () {
 					//AGS Kartendienst von Esri?
 					if (url.hostname.indexOf("arcgisonline.com")>-1 || url.hostname.indexOf("arcgis.com")>-1) {
 						//Der Copyright-Vermerk muss immer sichtbar sein
-						var _attributionControl = $.grep(map.getControls().getArray(), function(_control, i) {
+						var _attributionControl = map.getControls().getArray().filter(function(_control) {
 							return controlAttribution.prototype.isPrototypeOf(_control);
 						})[0];
 						_attributionControl.setCollapsible(false);
@@ -241,37 +242,47 @@ var stma_openlayers = /** @class */ (function () {
 					//Copyrighthinweis
 					predefinedSourceParams.attributions = "© Stadtmessungsamt, LHS Stuttgart";
 				}
-				$.extend(true, sourceParams, _sourceParams, predefinedSourceParams);
-				
+				sourceParams = {
+					...sourceParams,
+					..._sourceParams,
+					...predefinedSourceParams
+				};
+
 				var _zIndex = 10;
 				//anderer zIndex für Stadtmessungsamt-Kartendienste
 				if (jQuery.inArray(url.hostname, _getConfig().wmts_hosts) > -1) {
 					_zIndex = 20;
 				}
-				
+
 				//layerParams
 				var layerParams = {
 					zIndex: _zIndex
 				};
-				
+
 				//diese Parameter können nicht überdefiniert werden.
 				var predefinedLayerParams = {
 					source: new sourceWMTS(sourceParams)
 				};
-				$.extend(true, layerParams, _layerParams, predefinedLayerParams);
+				layerParams = {
+					...layerParams,
+					..._layerParams,
+					...predefinedLayerParams
+				};
 				
 				//gecachten Layer erstellen
 				var layer = new layerTile(layerParams);
-				
+
 				//View konfigurieren, falls diese noch nicht konfiguriert wurde
 				if (map.getView().getProjection().getCode() != projection) {
-					$.extend(true, viewParams, { resolutions: sourceParams.tileGrid.getResolutions(), constrainResolution: true} );
-					map.setView(new View(viewParams));
+					map.setView(new View({
+						...viewParams,
+						...{ resolutions: sourceParams.tileGrid.getResolutions(), constrainResolution: true}
+					}));
 				}
-				
+
 				//Layer hinzufügen
 				map.addLayer(layer);
-				
+
 				//Callbackfunktion ausführen
 				if (typeof _callbackFunction == "function") {
 					_callbackFunction(layer);
@@ -282,7 +293,7 @@ var stma_openlayers = /** @class */ (function () {
 			}
 		});
 	}
-	
+
 	//	@description	fügt einen dynamischen WMS-Kartendienst hinzu.
 	//					Der Layer kann gekachelt oder als ganzes Bild abgerufen werden. Standard ist der Abruf als ganzes Bild,
 	//					da aber einige WMS-Dienste keine großen Bilder auf einmal zurückgeben können, kann der WMS auch gekachelt
@@ -311,89 +322,103 @@ var stma_openlayers = /** @class */ (function () {
 	//	@since			v2.1
 	var _addWMSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
 		var _self = this;
-		
+
 		//sourceParams
 		var sourceParams = {
 			url: _url,
 			params: {"LAYERS": _layerName }
 		};
-		
+
 		//diese Parameter können nicht überdefiniert werden.
 		var predefinedSourceParams = {
 			ratio: 1
 		};
-		
+
 		var url = new URL(_url);
-		if (jQuery.inArray(url.hostname, _getConfig().wms_hosts) > -1) {					
+		if (jQuery.inArray(url.hostname, _getConfig().wms_hosts) > -1) {
 			//Copyrighthinweis
 			predefinedSourceParams.attributions = "© Stadtmessungsamt, LHS Stuttgart";
 		}
-		
-		$.extend(true, sourceParams, _sourceParams, predefinedSourceParams);
-		
+
+		sourceParams = {
+			...sourceParams,
+			..._sourceParams,
+			...predefinedSourceParams
+		};
+
 		//Der Layer kann gekachelt oder als ganzes Bild abgerufen werden.
 		if (sourceParams.TILED == true) {
 			//gekachelter Abruf = gecacht
-			
+
 			var _zIndex = 10;
 			//anderer zIndex für Stadtmessungsamt-Kartendienste
 			if (jQuery.inArray(url.hostname, _getConfig().wms_hosts) > -1) {
 				_zIndex = 20;
 			}
-			
+
 			//layerParams
 			var layerParams = {
 				zIndex: _zIndex
 			};
-			
+
 			//diese Parameter können nicht überdefiniert werden.
 			var predefinedLayerParams = {
 				source: new sourceTileWMS(sourceParams)
 			};
-			$.extend(true, layerParams, _layerParams, predefinedLayerParams);
-			
+			layerParams = {
+				...layerParams,
+				..._layerParams,
+				...predefinedLayerParams
+			};
+
 			//Layer erstellen
 			var layer = new layerTile(layerParams);
-			
+
 		} else {
 			//Abruf als ein Bild = dynamisch
-			
+
 			var _zIndex = 40;
 			//anderer zIndex für Stadtmessungsamt-Kartendienste
 			if (jQuery.inArray(url.hostname, _getConfig().wms_hosts) > -1) {
 				_zIndex = 50;
 			}
-			
+
 			//layerParams
 			var layerParams = {
 				zIndex: _zIndex
 			};
-			
+
 			//diese Parameter können nicht überdefiniert werden.
 			var predefinedLayerParams = {
 				source: new sourceImageWMS(sourceParams)
 			};
-			$.extend(true, layerParams, _layerParams, predefinedLayerParams);
-			
+			layerParams = {
+				...layerParams,
+				..._layerParams,
+				...predefinedLayerParams
+			};
+
 			//Layer erstellen
 			var layer = new layerImage(layerParams);
 		}
-		
+
 		//View konfigurieren, falls diese noch nicht konfiguriert wurde
 		if (map.getView().getProjection().getCode() != projection) {
-			$.extend(true, viewParams, { constrainResolution: true} );
-			map.setView(new View(viewParams));
+			map.setView(new View({
+				...viewParams,
+				...{ constrainResolution: true}
+			}));
 		}
-		
+
 		//Layer hinzufügen
 		map.addLayer(layer);
-		
+
 		//Callbackfunktion ausführen
 		if (typeof _callbackFunction == "function") {
 			_callbackFunction(layer);
 		}
 	}
-	
+
 	//	@description	fügt einen EsriLayer hinzu. (gecacht)
 	//
 	//	@argument		_url {String}
@@ -417,9 +442,9 @@ var stma_openlayers = /** @class */ (function () {
 	//	@since			v0.0
 	var _initCachedLayer = function (_url, _layerParams, _sourceParams, ags_info, _callbackFunction) {
 		var _self = this;
-		
+
 		var resolutions = [];
-		$.each(ags_info.tileInfo.lods, function(i, lod) {
+		ags_info.tileInfo.lods.forEach(function(lod) {
 			resolutions.push(lod.resolution);
 		});
 
@@ -431,13 +456,15 @@ var stma_openlayers = /** @class */ (function () {
 			tileSize: [ags_info.tileInfo.rows, ags_info.tileInfo.cols]
 		};
 		var tileGrid = new TileGrid(params);
-		
+
 		//View konfigurieren, falls diese noch nicht konfiguriert wurde
 		if (map.getView().getProjection().getCode() != projection) {
-			$.extend(true, viewParams, { resolutions: resolutions, constrainResolution: true} );
-			map.setView(new View(viewParams));
+			map.setView(new View({
+				...viewParams,
+				...{ resolutions: resolutions, constrainResolution: true}
+			}));
 		}
-		
+
 		//Projektion ermitteln
 		var projection;
 		if (ags_info.spatialReference.latestWkid != null) {
@@ -445,12 +472,12 @@ var stma_openlayers = /** @class */ (function () {
 		} else {
 			projection = ags_info.spatialReference.wkid;
 		}
-		
+
 		//sourceParams
 		var sourceParams = {
 			minZoom: '0'
 		};
-		
+
 		//ToDo: XYZ-Dienst vorsehen? Anderer Server + Instanz?
 		//diese Parameter können nicht überdefiniert werden.
 		var predefinedSourceParams = {
@@ -459,35 +486,43 @@ var stma_openlayers = /** @class */ (function () {
 			attributions: ags_info.copyrightText,
 			url: _url + '/tile/{z}/{y}/{x}'
 		};
-		
+
 		if (tileLoadFunction != null) {
 			predefinedSourceParams.tileLoadFunction = tileLoadFunction;
 		}
-		$.extend(true, sourceParams, _sourceParams, predefinedSourceParams);
-		
+		sourceParams = {
+			...sourceParams,
+			..._sourceParams,
+			...predefinedSourceParams
+		};
+
 		var _zIndex = 10;
 		var url = new URL(_url);
 		if (jQuery.inArray(url.hostname, _getConfig().ags_hosts) > -1) {
 			_zIndex = 20;
 		}
-		
+
 		//layerParams
 		var layerParams = {
 			zIndex: _zIndex
 		};
-		
+
 		//diese Parameter können nicht überdefiniert werden.
 		var predefinedLayerParams = {
 			source: new sourceXYZ(sourceParams)
 		};
-		$.extend(true, layerParams, _layerParams, predefinedLayerParams);
-		
+		layerParams = {
+			...layerParams,
+			..._layerParams,
+			...predefinedLayerParams
+		};
+
 		//gecachten Layer erstellen
 		var layer = new layerTile(layerParams);
-		
+
 		//Layer hinzufügen
 		map.addLayer(layer);
-		
+
 		//Callbackfunktion ausführen
 		if (typeof _callbackFunction == "function") {
 			_callbackFunction(layer);
@@ -517,20 +552,24 @@ var stma_openlayers = /** @class */ (function () {
 	//	@since			v0.0
 	var _initDynamicLayer = function (_url, _layerParams, _sourceParams, ags_info, _callbackFunction) {
 		var _self = this;
-		
+
 		//sourceParams
 		var sourceParams = {
 			params: {layers: 'show:0'}
 		};
-		
+
 		//diese Parameter können nicht überdefiniert werden.
 		var predefinedSourceParams = {
 			ratio: 1,
 			url: _url,
 			attributions: [ags_info.copyrightText]
 		};
-		$.extend(true, sourceParams, _sourceParams, predefinedSourceParams);
-		
+		sourceParams = {
+			...sourceParams,
+			..._sourceParams,
+			...predefinedSourceParams
+		};
+
 		//layerParams
 		var _zIndex = 40;
 		var url = new URL(_url);
@@ -547,8 +586,12 @@ var stma_openlayers = /** @class */ (function () {
 		var predefinedLayerParams = {
 			source: new sourceImageArcGISRest(sourceParams)
 		};
-		$.extend(true, layerParams, _layerParams, predefinedLayerParams);
-		
+		layerParams = {
+			...layerParams,
+			..._layerParams,
+			...predefinedLayerParams
+		};
+
 		//dynamischen Layer erstellen
 		var layer = new layerImage(layerParams);
 		//Layer hinzufügen
@@ -648,8 +691,12 @@ var stma_openlayers = /** @class */ (function () {
 			loadTilesWhileAnimating: true, //Kacheln während des Zoomens nachladen
 			loadTilesWhileInteracting: true //Kacheln während des Panens nachladen
 		};
-		$.extend(true, mapParams, _mapParams, predefinedMapParams);
-		
+		mapParams = {
+			...mapParams,
+			..._mapParams,
+			...predefinedMapParams
+		};
+
 		//Sicherstellen, dass der Attribution-Control vorhanden ist.
 		//Dieser muss vorhanden sein, wenn Karten von ESRI genutzt werden.
 		if (mapParams.controls != null) {
@@ -668,18 +715,17 @@ var stma_openlayers = /** @class */ (function () {
 		}
 		
 		//View definieren
-		viewParams = $.extend(true,
-			{},
-			{
-				center: [513785, 5402232],
+		viewParams = {
+			...{
+				center: [513785, 5402232], // Stuttgart
 				zoom: 2
 			},
-			_viewParams,
-			{
+			..._viewParams,
+			...{
 				projection: getProjection(projection)
 			}
-		);
-		
+		};
+
 		//Karte definieren
 		map = new Map(mapParams);
 		
@@ -919,7 +965,10 @@ var stma_openlayers = /** @class */ (function () {
 		var _predefinedSourceParams = {
 			matrixSet: _getConfig().wmts_matrix
 		}
-		$.extend(true, _sourceParams, _predefinedSourceParams);
+		_sourceParams = {
+			..._sourceParams,
+			..._predefinedSourceParams
+		};
 		_addWMTSLayer("https://" + _getConfig().wmts_host + "/" + _getConfig().wmts_instance + "/gwc/service/wmts?REQUEST=GetCapabilities", _layerName, _layerParams, _sourceParams, _callbackFunction);
 	}
 	
@@ -975,8 +1024,10 @@ var stma_openlayers = /** @class */ (function () {
 		var _predefinedSourceParams = {
 			TILED: _getConfig().wms_tiled
 		}
-		$.extend(true, _sourceParams, _predefinedSourceParams);
-		
+		_sourceParams = {
+			..._sourceParams,
+			..._predefinedSourceParams
+		};
 		_addWMSLayer("https://" + _getConfig().wms_host + "/" + _getConfig().wms_instance, _layerName, _layerParams, _sourceParams, _callbackFunction);
 	}
 	
@@ -1035,8 +1086,10 @@ var stma_openlayers = /** @class */ (function () {
 			var _predefinedSourceParams = {
 				matrixSet: _getConfig().wmts_services[_mapname].matrix
 			}
-			$.extend(true, _sourceParams, _predefinedSourceParams);
-			
+			_sourceParams = {
+				..._sourceParams,
+				..._predefinedSourceParams
+			};
 			_addWMTSLayer(_urlGetCapabilities, _getConfig().wmts_services[_mapname].service, _layerParams, _sourceParams, _callbackFunction);
 		} else 
 		if (_getConfig().wms_services != null && _getConfig().wms_services[_mapname] != null) {
@@ -1051,8 +1104,10 @@ var stma_openlayers = /** @class */ (function () {
 			var _predefinedSourceParams = {
 				TILED: _getConfig().wms_services[_mapname].tiled
 			}
-			$.extend(true, _sourceParams, _predefinedSourceParams);
-			
+			_sourceParams = {
+				..._sourceParams,
+				..._predefinedSourceParams
+			};
 			_addWMSLayer(_url, _getConfig().wms_services[_mapname].service, _layerParams, _sourceParams, _callbackFunction);
 		} else {
 			console.error("Karte '" + _mapname + "' nicht gefunden");
@@ -1131,16 +1186,24 @@ var stma_openlayers = /** @class */ (function () {
 	 *	@since			v2.0
 	 */
 	stma_openlayers.prototype.addGeoJSONfromURL = function(_url, _zoomTo, _style, _callbackFunction) {
-		$.getJSON(_url, $.proxy(function(_geojson) {
-			this.addGeoJSON(_geojson, _zoomTo, _style, _callbackFunction);
-		}, this)).fail(function(_error) {
-			console.error( "JSON konnte von URL ", _url, " nicht abgerufen werden.", _error);
-			
-			//Callbackfunktion ausführen
-			if (typeof _callbackFunction == "function") {
-				_callbackFunction(false);
-			}
-		});
+		fetch(_url)
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('Network response was not ok');
+				}
+				return response.json();
+			})
+			.then(geojson => {
+				this.addGeoJSON(geojson, _zoomTo, _style, _callbackFunction);
+			})
+			.catch(error => {
+				console.error("JSON konnte von URL " + _url + " nicht abgerufen werden.", error);
+
+				// Callbackfunktion ausführen
+				if (typeof _callbackFunction === "function") {
+					_callbackFunction(false);
+				}
+			});
 	}
 	
 	/**
