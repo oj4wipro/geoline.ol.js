@@ -7,8 +7,8 @@ import styleFill from "ol/style/Fill";
 import styleStroke from "ol/style/Stroke";
 import styleStyle from "ol/style/Style";
 
-import example_25832JSON from "url:./testdata/example_25832.json"
 import example_4326JSON from "./testdata/example_4326.json"
+const example_25832JSON_URL = "testdata/example_25832.json"
 
 var mymap;
 $(function() {
@@ -42,9 +42,9 @@ $(function() {
 		}
 		return _styles[feature.getGeometry().getType()];
 	};
-	
+
 	mymap.addGeoJSON(example_4326JSON, false, _styleFunction, function(_layer) {
-		if (_layer != false) {
+		if (_layer !== false) {
 			console.info("Features aus GeoJSON hinzugefügt.")
 			
 			var _overlayFunction = function(_feature) {
@@ -60,9 +60,9 @@ $(function() {
 		}
 	});
 	
-	mymap.addGeoJSON(example_25832JSON, false, _styleFunction, function(_layer) {
-		if (_layer != false) {
-			console.info("Features aus GeoJSON hinzugefügt.");
+	mymap.addGeoJSONfromURL(example_25832JSON_URL, false, _styleFunction, function(_layer) {
+		if (_layer !== false) {
+			console.info("Features aus GeoJSON per URL hinzugefügt.");
 			
 			var _overlayFunction2 = function(_feature) {
 				return _feature.get("HINWEIS"); //Es wird der Inhalt des Attributes HINWEIS aus dem GeoJSON angezeigt.
