@@ -3,6 +3,7 @@
   "version": "2.1.0",
   "description": "Bibliothek zur einfachen Einbindung von Kartendiensten des Stadtmessungsamtes Stuttgart in OpenLayers",
   "author": "Stadtmessungsamt, LHS Stuttgart",
+  "type": "module",
   "files": [
     "./dist",
     "./src",
@@ -19,6 +20,10 @@
       "distDir": "dist/examples"
     }
   },
+  "staticFiles": {
+    "staticPath": "examples/testdata",
+    "staticOutPath": "testdata"
+  },
   "dependencies": {
     "jquery": ">=1.9.0",
     "ol": "^6.3.1",
@@ -28,6 +33,7 @@
     "cross-var": "^1.1.0",
     "jsdoc": "^4.0.4",
     "parcel": "^2.15.2",
+    "parcel-reporter-static-files-copy": "^1.5.3",
     "replace": "^1.2.2"
   },
   "repository": {
@@ -42,6 +48,7 @@
     "build-css": "parcel build src/geoline.ol.css --target geoline.ol.js --no-scope-hoist --no-cache",
     "build-examples": "parcel build examples/example*.html --no-content-hash --no-scope-hoist --no-cache --public-url '.' --target examples && cross-var replace '@version@' $npm_package_version dist/examples/example.html",
     "build-doc": "jsdoc -c jssdocconfig.json && cross-var replace '>Home</h1>' '>Version $npm_package_version</h1>' dist/doc/index.html",
-    "build": "npm run build-js && npm run build-css && npm run build-examples && npm run build-doc"
+    "build": "npm run build-js && npm run build-css && npm run build-examples && npm run build-doc",
+    "test": "vitest --run --reporter verbose"
   }
 }
