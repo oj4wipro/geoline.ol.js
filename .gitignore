@@ -13,6 +13,7 @@ node_modules/
 !.vscode/extensions.json
 .vscode-test
 .idea
+/start-dev.sh
 
 # Logs
 logs
