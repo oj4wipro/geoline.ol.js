@@ -144,8 +144,8 @@ var stma_openlayers = /** @class */ (function () {
 
 					//Copyright
 					var url = new URL(_url);
-					if (jQuery.inArray(url.hostname, _getConfig().ags_hosts) > -1) {
-						if (ags_info.copyrightText == null || ags_info.copyrightText.length == 0) {
+					if (_getConfig().ags_hosts.includes(url.hostname)) {
+						if (ags_info.copyrightText == null || ags_info.copyrightText.length === 0) {
 							ags_info.copyrightText = "© Stadtmessungsamt, LHS Stuttgart"
 						}
 					}
@@ -233,7 +233,7 @@ var stma_openlayers = /** @class */ (function () {
 				//diese Parameter können nicht überdefiniert werden.
 				var predefinedSourceParams = {};
 
-				if (jQuery.inArray(url.hostname, _getConfig().wmts_hosts) > -1) {
+				if (_getConfig().wmts_hosts.includes(url.hostname)) {
 					//URL-Parameter überdefinieren, da diese nicht korrekt ermittelt werden können.
 					predefinedSourceParams.urls = [ url.origin + url.pathname + "/rest/" + _layerName + "/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}?format=image/png" ];
 					predefinedSourceParams.requestEncoding = "REST";
@@ -249,7 +249,7 @@ var stma_openlayers = /** @class */ (function () {
 
 				var _zIndex = 10;
 				//anderer zIndex für Stadtmessungsamt-Kartendienste
-				if (jQuery.inArray(url.hostname, _getConfig().wmts_hosts) > -1) {
+				if (_getConfig().wmts_hosts.includes(url.hostname)) {
 					_zIndex = 20;
 				}
 
@@ -334,7 +334,7 @@ var stma_openlayers = /** @class */ (function () {
 		};
 
 		var url = new URL(_url);
-		if (jQuery.inArray(url.hostname, _getConfig().wms_hosts) > -1) {
+		if (_getConfig().wms_hosts.includes(url.hostname)) {
 			//Copyrighthinweis
 			predefinedSourceParams.attributions = "© Stadtmessungsamt, LHS Stuttgart";
 		}
@@ -351,7 +351,7 @@ var stma_openlayers = /** @class */ (function () {
 
 			var _zIndex = 10;
 			//anderer zIndex für Stadtmessungsamt-Kartendienste
-			if (jQuery.inArray(url.hostname, _getConfig().wms_hosts) > -1) {
+			if (_getConfig().wms_hosts.includes(url.hostname)) {
 				_zIndex = 20;
 			}
 
@@ -378,7 +378,7 @@ var stma_openlayers = /** @class */ (function () {
 
 			var _zIndex = 40;
 			//anderer zIndex für Stadtmessungsamt-Kartendienste
-			if (jQuery.inArray(url.hostname, _getConfig().wms_hosts) > -1) {
+			if (_getConfig().wms_hosts.includes(url.hostname)) {
 				_zIndex = 50;
 			}
 
@@ -497,7 +497,7 @@ var stma_openlayers = /** @class */ (function () {
 
 		var _zIndex = 10;
 		var url = new URL(_url);
-		if (jQuery.inArray(url.hostname, _getConfig().ags_hosts) > -1) {
+		if (_getConfig().ags_hosts.includes(url.hostname)) {
 			_zIndex = 20;
 		}
 
@@ -572,7 +572,7 @@ var stma_openlayers = /** @class */ (function () {
 		//layerParams
 		var _zIndex = 40;
 		var url = new URL(_url);
-		if (jQuery.inArray(url.hostname, _getConfig().ags_hosts) > -1) {
+		if (_getConfig().ags_hosts.includes(url.hostname)) {
 			_zIndex = 50;
 		}
 
@@ -782,7 +782,7 @@ var stma_openlayers = /** @class */ (function () {
 		var _self = this;
 
 		var url = new URL(_url);
-		if (jQuery.inArray(url.hostname, _getConfig().ags_hosts) > -1) {
+		if (_getConfig().ags_hosts.includes(url.hostname)) {
 			console.error("Kartendienste des Stadtmessungsamtes über die Methode addStmaEsriLayer hinzufügen");
 		} else {
 			_addEsriLayer(_url, _layerParams, _sourceParams, _callbackFunction);
@@ -828,7 +828,7 @@ var stma_openlayers = /** @class */ (function () {
 		var _self = this;
 
 		var url = new URL(_url);
-		if (jQuery.inArray(url.hostname, _getConfig().wmts_hosts) > -1) {
+		if (_getConfig().wmts_hosts.includes(url.hostname)) {
 			console.error("WMTS-Kartendienste des Stadtmessungsamtes über die Methode addStmaWMTSLayer hinzufügen");
 		} else {
 			_addWMTSLayer(_url, _layerName, _layerParams, _sourceParams, _callbackFunction);
@@ -885,7 +885,7 @@ var stma_openlayers = /** @class */ (function () {
 		var _self = this;
 
 		var url = new URL(_url);
-		if (jQuery.inArray(url.hostname, _getConfig().wms_hosts) > -1) {
+		if (_getConfig().wms_hosts.includes(url.hostname)) {
 			console.error("WMS-Kartendienste des Stadtmessungsamtes über die Methode addStmaWMSLayer hinzufügen");
 		} else {
 			_addWMSLayer(_url, _layerName, _layerParams, _sourceParams, _callbackFunction);
