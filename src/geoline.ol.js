@@ -1,6 +1,6 @@
 /**
  @module stma_openlayers
-*/
+ */
 
 import jquery from "jquery";
 window.$ = window.jQuery = jquery;
@@ -34,7 +34,7 @@ import {register} from 'ol/proj/proj4';
 
 /**
  *	version			@version@
-*/
+ */
 
 /**
  *	@method			stma_openlayers
@@ -46,9 +46,8 @@ import {register} from 'ol/proj/proj4';
  */
 var stma_openlayers = /** @class */ (function () {
 
-	function stma_openlayers(options) {
-		var _this = this;
-		return _this;
+	function stma_openlayers() {
+		return this;
 	}
 
 	// ----------------------------------------------------------------------------------
@@ -206,8 +205,6 @@ var stma_openlayers = /** @class */ (function () {
 	//
 	//	@since			v2.1
 	var _addWMTSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
-		var _self = this;
-
 		//GetCapabilities abrufen
 		var url = new URL(_url);
 		$.ajax({
@@ -311,8 +308,6 @@ var stma_openlayers = /** @class */ (function () {
 	//
 	//	@since			v2.1
 	var _addWMSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
-		var _self = this;
-
 		//sourceParams
 		var sourceParams = {
 			url: _url,
@@ -431,8 +426,6 @@ var stma_openlayers = /** @class */ (function () {
 	//
 	//	@since			v0.0
 	var _initCachedLayer = function (_url, _layerParams, _sourceParams, ags_info, _callbackFunction) {
-		var _self = this;
-
 		var resolutions = [];
 		ags_info.tileInfo.lods.forEach(function(lod) {
 			resolutions.push(lod.resolution);
@@ -541,8 +534,6 @@ var stma_openlayers = /** @class */ (function () {
 	//
 	//	@since			v0.0
 	var _initDynamicLayer = function (_url, _layerParams, _sourceParams, ags_info, _callbackFunction) {
-		var _self = this;
-
 		//sourceParams
 		var sourceParams = {
 			params: {layers: 'show:0'}
@@ -641,8 +632,6 @@ var stma_openlayers = /** @class */ (function () {
 	 *    @since            v0.0
 	 */
 	stma_openlayers.prototype.initMap = function(_epsgCode, _mapParams, _viewParams, _customParams, _callbackFunction) {
-		var _self = this;
-
 		//(25832)UTM-Projektion zu den Projektionen von OpenLayers hinzufügen
 		proj4.defs("EPSG:25832", "+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
 		register(proj4);
@@ -695,7 +684,7 @@ var stma_openlayers = /** @class */ (function () {
 		//Dieser muss vorhanden sein, wenn Karten von ESRI genutzt werden.
 		if (mapParams.controls != null) {
 			var _attributionControlAvailable = false;
-			mapParams.controls.forEach(function(_control, i) {
+			mapParams.controls.forEach(function(_control) {
 				if (controlAttribution.prototype.isPrototypeOf(_control)) {
 					_attributionControlAvailable = true;
 				}
@@ -770,8 +759,6 @@ var stma_openlayers = /** @class */ (function () {
 	 *	@since			v0.0
 	 */
 	stma_openlayers.prototype.addEsriLayer = function(_url, _layerParams, _sourceParams, _callbackFunction) {
-		var _self = this;
-
 		var url = new URL(_url);
 		if (_getConfig().ags_hosts.includes(url.hostname)) {
 			console.error("Kartendienste des Stadtmessungsamtes über die Methode addStmaEsriLayer hinzufügen");
@@ -816,8 +803,6 @@ var stma_openlayers = /** @class */ (function () {
 	 *	@since			v2.1
 	 */
 	stma_openlayers.prototype.addWMTSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
-		var _self = this;
-
 		var url = new URL(_url);
 		if (_getConfig().wmts_hosts.includes(url.hostname)) {
 			console.error("WMTS-Kartendienste des Stadtmessungsamtes über die Methode addStmaWMTSLayer hinzufügen");
@@ -873,8 +858,6 @@ var stma_openlayers = /** @class */ (function () {
 	 *	@since			v2.1
 	 */
 	stma_openlayers.prototype.addWMSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
-		var _self = this;
-
 		var url = new URL(_url);
 		if (_getConfig().wms_hosts.includes(url.hostname)) {
 			console.error("WMS-Kartendienste des Stadtmessungsamtes über die Methode addStmaWMSLayer hinzufügen");
@@ -917,8 +900,6 @@ var stma_openlayers = /** @class */ (function () {
 	 *	@since			v0.0
 	 */
 	stma_openlayers.prototype.addStmaEsriLayer = function(_mapservice, _layerParams, _sourceParams, _callbackFunction) {
-		var _self = this;
-
 		_addEsriLayer("https://" + _getConfig().ags_host + "/" + _getConfig().ags_instance + "/rest/services/" + _mapservice + "/MapServer", _layerParams, _sourceParams, _callbackFunction);
 	}
 
@@ -955,8 +936,6 @@ var stma_openlayers = /** @class */ (function () {
 	 *	@since			v2.1
 	 */
 	stma_openlayers.prototype.addStmaWMTSLayer = function(_layerName, _layerParams, _sourceParams, _callbackFunction) {
-		var _self = this;
-
 		//Matrix definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
 		if (_sourceParams == null) {
 			_sourceParams = {};
@@ -1014,8 +993,6 @@ var stma_openlayers = /** @class */ (function () {
 	 *	@since			v2.1
 	 */
 	stma_openlayers.prototype.addStmaWMSLayer = function(_layerName, _layerParams, _sourceParams, _callbackFunction) {
-		var _self = this;
-
 		//Tiled definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
 		if (_sourceParams == null) {
 			_sourceParams = {};
@@ -1068,8 +1045,6 @@ var stma_openlayers = /** @class */ (function () {
 	 *	@since			v0.0
 	 */
 	stma_openlayers.prototype.addStmaBaseLayer = function(_mapname, _layerParams, _sourceParams, _callbackFunction) {
-		var _self = this;
-
 		if (_getConfig().ags_services != null && _getConfig().ags_services[_mapname] != null) {
 			_addEsriLayer("https://" + _getConfig().ags_services[_mapname].ags_host + "/" + _getConfig().ags_services[_mapname].ags_instance + "/rest/services/" + _getConfig().ags_services[_mapname].ags_service + "/MapServer", _layerParams, _sourceParams, _callbackFunction);
 		} else
@@ -1395,8 +1370,6 @@ var stma_openlayers = /** @class */ (function () {
 	 *	@since			v0.86
 	 */
 	stma_openlayers.prototype.addStmaEsriFeatureLayer = function(_mapservice, _layerId, _styleFunction, _callbackFunction) {
-		var _self = this;
-
 		var _epsgCode = projection.replace("EPSG:", "");
 
 		var _esrijsonFormat = new formatEsriJSON();
