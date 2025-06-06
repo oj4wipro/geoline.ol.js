@@ -1,5 +1,5 @@
-import geolineOlJs from "../src/geoline.ol";
-//import geolineOlJs from "@stadtmessungsamt-stuttgart/geoline.ol.js";
+//import StmaOpenLayers from "@stadtmessungsamt-stuttgart/geoline.ol.js";
+import StmaOpenLayers from "../src/geoline.ol";
 import "../src/geoline.ol.css";
 
 import styleIcon from "ol/style/Icon";
@@ -12,7 +12,7 @@ const example_25832JSON_URL = "testdata/example_25832.json"
 
 var mymap;
 $(function() {
-	mymap = new geolineOlJs();
+	mymap = new StmaOpenLayers();
 	mymap.initMap(25832, {}, {});
 	
 	mymap.addStmaBaseLayer("Grundkarte");

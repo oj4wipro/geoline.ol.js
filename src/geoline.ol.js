@@ -1,5 +1,5 @@
 /**
- @module stma_openlayers
+ @module StmaOpenLayers
  */
 
 import Feature from "ol/Feature";
@@ -7,22 +7,22 @@ import Map from "ol/Map";
 import Overlay from "ol/Overlay";
 import TileGrid from "ol/tilegrid/TileGrid";
 import View from "ol/View";
-import controlAttribution from "ol/control/Attribution";
-import formatEsriJSON from "ol/format/EsriJSON";
-import formatGeoJSON from "ol/format/GeoJSON";
-import formatWMTSCapabilities from "ol/format/WMTSCapabilities";
-import geomPoint from "ol/geom/Point";
-import layerImage from "ol/layer/Image";
-import layerTile from "ol/layer/Tile";
-import layerVector from "ol/layer/Vector";
-import sourceImageArcGISRest from "ol/source/ImageArcGISRest";
-import sourceImageWMS from "ol/source/ImageWMS";
-import sourceTileWMS from 'ol/source/TileWMS';
-import sourceVector from "ol/source/Vector";
-import sourceXYZ from "ol/source/XYZ";
-import sourceWMTS, {optionsFromCapabilities as sourceWMTS_optionsFromCapabilities} from 'ol/source/WMTS';
-import styleIcon from "ol/style/Icon";
-import styleStyle from "ol/style/Style";
+import ControlAttribution from "ol/control/Attribution";
+import FormatEsriJSON from "ol/format/EsriJSON";
+import FormatGeoJSON from "ol/format/GeoJSON";
+import FormatWMTSCapabilities from "ol/format/WMTSCapabilities";
+import GeomPoint from "ol/geom/Point";
+import LayerImage from "ol/layer/Image";
+import LayerTile from "ol/layer/Tile";
+import LayerVector from "ol/layer/Vector";
+import SourceImageArcGISRest from "ol/source/ImageArcGISRest";
+import SourceImageWMS from "ol/source/ImageWMS";
+import SourceTileWMS from 'ol/source/TileWMS';
+import SourceVector from "ol/source/Vector";
+import SourceXYZ from "ol/source/XYZ";
+import SourceWMTS, {optionsFromCapabilities as sourceWMTS_optionsFromCapabilities} from 'ol/source/WMTS';
+import StyleIcon from "ol/style/Icon";
+import StyleStyle from "ol/style/Style";
 import {defaults as defaultControls} from 'ol/control';
 
 import proj4 from "proj4";
@@ -37,16 +37,16 @@ window.$ = window.jQuery = jquery;
  */
 
 /**
- *	@method			stma_openlayers
+ *	@method			StmaOpenLayers
  *	@description	Momentan ist OpenLayers 6.3.1 eingebunden.
  *
  *	@returns		{null} -
  *
  *	@since			v0.0
  */
-const stma_openlayers = /** @class */ (function () {
+let StmaOpenLayers = /** @class */ (function () {
 
-	function stma_openlayers() {
+	function StmaOpenLayers() {
 		return this;
 	}
 
@@ -148,7 +148,7 @@ const stma_openlayers = /** @class */ (function () {
 				if (url.hostname.indexOf("arcgisonline.com")>-1 || url.hostname.indexOf("arcgis.com")>-1) {
 					//Der Copyright-Vermerk muss immer sichtbar sein
 					const _attributionControl = map.getControls().getArray().filter(function(_control) {
-						return controlAttribution.prototype.isPrototypeOf(_control);
+						return ControlAttribution.prototype.isPrototypeOf(_control);
 					})[0];
 					_attributionControl.setCollapsible(false);
 					_attributionControl.setCollapsed(false);
@@ -211,7 +211,7 @@ const stma_openlayers = /** @class */ (function () {
 			url: _url,
 			type: "POST",
 			success: function (wmtscapabilities) {
-				const _formatWMTSCapabilities = new formatWMTSCapabilities();
+				const _formatWMTSCapabilities = new FormatWMTSCapabilities();
 
 				//sourceParams
 				let sourceParams = sourceWMTS_optionsFromCapabilities(_formatWMTSCapabilities.read(wmtscapabilities), {
@@ -244,7 +244,7 @@ const stma_openlayers = /** @class */ (function () {
 
 				//diese Parameter können nicht überdefiniert werden.
 				let predefinedLayerParams = {
-					source: new sourceWMTS(sourceParams)
+					source: new SourceWMTS(sourceParams)
 				};
 				layerParams = {
 					...layerParams,
@@ -253,7 +253,7 @@ const stma_openlayers = /** @class */ (function () {
 				};
 
 				//gecachten Layer erstellen
-				let layer = new layerTile(layerParams);
+				let layer = new LayerTile(layerParams);
 
 				//View konfigurieren, falls diese noch nicht konfiguriert wurde
 				if (map.getView().getProjection().getCode() !== projection) {
@@ -345,7 +345,7 @@ const stma_openlayers = /** @class */ (function () {
 
 			//diese Parameter können nicht überdefiniert werden.
 			let predefinedLayerParams = {
-				source: new sourceTileWMS(sourceParams)
+				source: new SourceTileWMS(sourceParams)
 			};
 			layerParams = {
 				...layerParams,
@@ -354,7 +354,7 @@ const stma_openlayers = /** @class */ (function () {
 			};
 
 			//Layer erstellen
-			layer = new layerTile(layerParams);
+			layer = new LayerTile(layerParams);
 
 		} else {
 			//Abruf als ein Bild = dynamisch
@@ -372,7 +372,7 @@ const stma_openlayers = /** @class */ (function () {
 
 			//diese Parameter können nicht überdefiniert werden.
 			let predefinedLayerParams = {
-				source: new sourceImageWMS(sourceParams)
+				source: new SourceImageWMS(sourceParams)
 			};
 			layerParams = {
 				...layerParams,
@@ -381,11 +381,11 @@ const stma_openlayers = /** @class */ (function () {
 			};
 
 			//Layer erstellen
-			layer = new layerImage(layerParams);
+			layer = new LayerImage(layerParams);
 		}
 
 		//View konfigurieren, falls diese noch nicht konfiguriert wurde
-		if (map.getView().getProjection().getCode() != projection) {
+		if (map.getView().getProjection().getCode() !== projection) {
 			map.setView(new View({
 				...viewParams,
 				...{ constrainResolution: true}
@@ -454,7 +454,7 @@ const stma_openlayers = /** @class */ (function () {
 
 		//sourceParams
 		let sourceParams = {
-			minZoom: '0'
+			minZoom: 0
 		};
 
 		//ToDo: XYZ-Dienst vorsehen? Anderer Server + Instanz?
@@ -488,7 +488,7 @@ const stma_openlayers = /** @class */ (function () {
 
 		//diese Parameter können nicht überdefiniert werden.
 		let predefinedLayerParams = {
-			source: new sourceXYZ(sourceParams)
+			source: new SourceXYZ(sourceParams)
 		};
 		layerParams = {
 			...layerParams,
@@ -497,7 +497,7 @@ const stma_openlayers = /** @class */ (function () {
 		};
 
 		//gecachten Layer erstellen
-		let layer = new layerTile(layerParams);
+		let layer = new LayerTile(layerParams);
 
 		//Layer hinzufügen
 		map.addLayer(layer);
@@ -561,7 +561,7 @@ const stma_openlayers = /** @class */ (function () {
 
 		//diese Parameter können nicht überdefiniert werden.
 		let predefinedLayerParams = {
-			source: new sourceImageArcGISRest(sourceParams)
+			source: new SourceImageArcGISRest(sourceParams)
 		};
 		layerParams = {
 			...layerParams,
@@ -570,7 +570,7 @@ const stma_openlayers = /** @class */ (function () {
 		};
 
 		//dynamischen Layer erstellen
-		let layer = new layerImage(layerParams);
+		let layer = new LayerImage(layerParams);
 		//Layer hinzufügen
 		map.addLayer(layer);
 
@@ -588,7 +588,7 @@ const stma_openlayers = /** @class */ (function () {
 	 *    @method            initMap
 	 *    @description    initialisiert die Karte<br/>
 	 *                    Beispiel:<br/>
-	 *                    <code>mymap = new stma_openlayers();<br/>
+	 *                    <code>mymap = new StmaOpenLayers();<br/>
 	 *                    mymap.initMap(25832, {}, {});</code>
 	 *
 	 *    @argument        _epsgCode {int} EPSG-Code des Koordinatensystems.
@@ -627,7 +627,7 @@ const stma_openlayers = /** @class */ (function () {
 	 *
 	 *    @since            v0.0
 	 */
-	stma_openlayers.prototype.initMap = function(_epsgCode, _mapParams, _viewParams, _customParams, _callbackFunction) {
+	StmaOpenLayers.prototype.initMap = function(_epsgCode, _mapParams, _viewParams, _customParams, _callbackFunction) {
 		//(25832)UTM-Projektion zu den Projektionen von OpenLayers hinzufügen
 		proj4.defs("EPSG:25832", "+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
 		register(proj4);
@@ -681,13 +681,13 @@ const stma_openlayers = /** @class */ (function () {
 		if (mapParams.controls != null) {
 			let _attributionControlAvailable = false;
 			mapParams.controls.forEach(function(_control) {
-				if (controlAttribution.prototype.isPrototypeOf(_control)) {
+				if (ControlAttribution.prototype.isPrototypeOf(_control)) {
 					_attributionControlAvailable = true;
 				}
 			});
 			if (_attributionControlAvailable === false) {
 				//Attribution-Control hinzufügen
-				mapParams.controls.push(new controlAttribution({
+				mapParams.controls.push(new ControlAttribution({
 					tipLabel: "Copyright"
 				}));
 			}
@@ -754,7 +754,7 @@ const stma_openlayers = /** @class */ (function () {
 	 *
 	 *	@since			v0.0
 	 */
-	stma_openlayers.prototype.addEsriLayer = function(_url, _layerParams, _sourceParams, _callbackFunction) {
+	StmaOpenLayers.prototype.addEsriLayer = function(_url, _layerParams, _sourceParams, _callbackFunction) {
 		const url = new URL(_url);
 		if (_getConfig().ags_hosts.includes(url.hostname)) {
 			console.error("Kartendienste des Stadtmessungsamtes über die Methode addStmaEsriLayer hinzufügen");
@@ -798,7 +798,7 @@ const stma_openlayers = /** @class */ (function () {
 	 *
 	 *	@since			v2.1
 	 */
-	stma_openlayers.prototype.addWMTSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
+	StmaOpenLayers.prototype.addWMTSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
 		const url = new URL(_url);
 		if (_getConfig().wmts_hosts.includes(url.hostname)) {
 			console.error("WMTS-Kartendienste des Stadtmessungsamtes über die Methode addStmaWMTSLayer hinzufügen");
@@ -853,7 +853,7 @@ const stma_openlayers = /** @class */ (function () {
 	 *
 	 *	@since			v2.1
 	 */
-	stma_openlayers.prototype.addWMSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
+	StmaOpenLayers.prototype.addWMSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
 		const url = new URL(_url);
 		if (_getConfig().wms_hosts.includes(url.hostname)) {
 			console.error("WMS-Kartendienste des Stadtmessungsamtes über die Methode addStmaWMSLayer hinzufügen");
@@ -895,7 +895,7 @@ const stma_openlayers = /** @class */ (function () {
 	 *
 	 *	@since			v0.0
 	 */
-	stma_openlayers.prototype.addStmaEsriLayer = function(_mapservice, _layerParams, _sourceParams, _callbackFunction) {
+	StmaOpenLayers.prototype.addStmaEsriLayer = function(_mapservice, _layerParams, _sourceParams, _callbackFunction) {
 		_addEsriLayer("https://" + _getConfig().ags_host + "/" + _getConfig().ags_instance + "/rest/services/" + _mapservice + "/MapServer", _layerParams, _sourceParams, _callbackFunction);
 	}
 
@@ -931,7 +931,7 @@ const stma_openlayers = /** @class */ (function () {
 	 *
 	 *	@since			v2.1
 	 */
-	stma_openlayers.prototype.addStmaWMTSLayer = function(_layerName, _layerParams, _sourceParams, _callbackFunction) {
+	StmaOpenLayers.prototype.addStmaWMTSLayer = function(_layerName, _layerParams, _sourceParams, _callbackFunction) {
 		//Matrix definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
 		if (_sourceParams == null) {
 			_sourceParams = {};
@@ -988,7 +988,7 @@ const stma_openlayers = /** @class */ (function () {
 	 *
 	 *	@since			v2.1
 	 */
-	stma_openlayers.prototype.addStmaWMSLayer = function(_layerName, _layerParams, _sourceParams, _callbackFunction) {
+	StmaOpenLayers.prototype.addStmaWMSLayer = function(_layerName, _layerParams, _sourceParams, _callbackFunction) {
 		//Tiled definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
 		if (_sourceParams == null) {
 			_sourceParams = {};
@@ -1040,7 +1040,7 @@ const stma_openlayers = /** @class */ (function () {
 	 *
 	 *	@since			v0.0
 	 */
-	stma_openlayers.prototype.addStmaBaseLayer = function(_mapname, _layerParams, _sourceParams, _callbackFunction) {
+	StmaOpenLayers.prototype.addStmaBaseLayer = function(_mapname, _layerParams, _sourceParams, _callbackFunction) {
 		if (_getConfig().ags_services != null && _getConfig().ags_services[_mapname] != null) {
 			_addEsriLayer("https://" + _getConfig().ags_services[_mapname].ags_host + "/" + _getConfig().ags_services[_mapname].ags_instance + "/rest/services/" + _getConfig().ags_services[_mapname].ags_service + "/MapServer", _layerParams, _sourceParams, _callbackFunction);
 		} else
@@ -1103,22 +1103,22 @@ const stma_openlayers = /** @class */ (function () {
 	 *
 	 *	@since			v0.0
 	 */
-	stma_openlayers.prototype.addPoints = function(_pointCoords, _imageURL, _callbackFunction) {
+	StmaOpenLayers.prototype.addPoints = function(_pointCoords, _imageURL, _callbackFunction) {
 
 		let features = [];
 		for (let i=0; i < _pointCoords.length; i++) {
 			features.push(new Feature({
-				geometry: new geomPoint(_pointCoords[i])
+				geometry: new GeomPoint(_pointCoords[i])
 			}));
 		}
 
-		const vectorLayer = new layerVector({
+		const vectorLayer = new LayerVector({
 			zIndex: 60,
-			source: new sourceVector({
+			source: new SourceVector({
 				features: features
 			}),
-			style: new styleStyle({
-				image: new styleIcon({
+			style: new StyleStyle({
+				image: new StyleIcon({
 					anchor: [0.5, 1],
 					src: _imageURL
 				})
@@ -1156,7 +1156,7 @@ const stma_openlayers = /** @class */ (function () {
 	 *
 	 *    @since            v2.0
 	 */
-	stma_openlayers.prototype.addGeoJSONfromURL = function(_url, _zoomTo, _style, _callbackFunction) {
+	StmaOpenLayers.prototype.addGeoJSONfromURL = function(_url, _zoomTo, _style, _callbackFunction) {
 		fetch(_url)
 			.then(response => {
 				if (!response.ok) {
@@ -1200,7 +1200,7 @@ const stma_openlayers = /** @class */ (function () {
 	 *
 	 *    @since            v2.0
 	 */
-	stma_openlayers.prototype.addGeoJSON = function(_geojson, _zoomTo, _style, _callbackFunction) {
+	StmaOpenLayers.prototype.addGeoJSON = function(_geojson, _zoomTo, _style, _callbackFunction) {
 
 		let _projectionGeoJSON = "EPSG:4326";
 		//Wurde das Koordinatensystem angegeben?
@@ -1221,16 +1221,16 @@ const stma_openlayers = /** @class */ (function () {
 			console.error("Projektion " + _projectionGeoJSON + " nicht gefunden. Es kann zu falscher Darstellung der Karte kommen");
 		}
 
-		const _geojsonFormat = new formatGeoJSON({
+		const _geojsonFormat = new FormatGeoJSON({
 			dataProjection: _projectionGeoJSON,
 			featureProjection: projection
 		})
 
-		const _vectorSource = new sourceVector({
+		const _vectorSource = new SourceVector({
 			features: _geojsonFormat.readFeatures(_geojson)
 		});
 
-		const vectorLayer = new layerVector({
+		const vectorLayer = new LayerVector({
 			zIndex: 60,
 			source: _vectorSource,
 			style: _style
@@ -1271,7 +1271,7 @@ const stma_openlayers = /** @class */ (function () {
 	 *
 	 *	@since			v1.2
 	 */
-	stma_openlayers.prototype.addOverlayForLayer = function(_layer, _overlayFunction) {
+	StmaOpenLayers.prototype.addOverlayForLayer = function(_layer, _overlayFunction) {
 
 		//globaler Overlay-Layer hinzufügen
 		if (overlayLayer == null) {
@@ -1363,12 +1363,12 @@ const stma_openlayers = /** @class */ (function () {
 	 *
 	 *	@since			v0.86
 	 */
-	stma_openlayers.prototype.addStmaEsriFeatureLayer = function(_mapservice, _layerId, _styleFunction, _callbackFunction) {
+	StmaOpenLayers.prototype.addStmaEsriFeatureLayer = function(_mapservice, _layerId, _styleFunction, _callbackFunction) {
 		const _epsgCode = projection.replace("EPSG:", "");
 
-		const _esrijsonFormat = new formatEsriJSON();
+		const _esrijsonFormat = new FormatEsriJSON();
 
-		const vectorSource = new sourceVector({
+		const vectorSource = new SourceVector({
 			loader: function(_extent, _resolution, _projection) {
 				const _url = "https://" + _getConfig().ags_host + "/" + _getConfig().ags_instance + "/rest/services/" + _mapservice + "/MapServer/" + _layerId + "/query/";
 
@@ -1407,7 +1407,7 @@ const stma_openlayers = /** @class */ (function () {
 			}))
 		});
 
-		const vectorLayer = new layerVector({
+		const vectorLayer = new LayerVector({
 			zIndex: 60,
 			source: vectorSource,
 			style: _styleFunction
@@ -1431,7 +1431,7 @@ const stma_openlayers = /** @class */ (function () {
 	 *
 	 *	@since			v0.0
 	 */
-	stma_openlayers.prototype.getMap = function() {
+	StmaOpenLayers.prototype.getMap = function() {
 		return map;
 	}
 
@@ -1444,10 +1444,15 @@ const stma_openlayers = /** @class */ (function () {
 	 *
 	 *	@since			v1.0
 	 */
-	stma_openlayers.prototype.getConfig = function() {
+	StmaOpenLayers.prototype.getConfig = function() {
 		return _getConfig();
 	}
 
-	return stma_openlayers;
+	return StmaOpenLayers;
 }());
-export default stma_openlayers;
+
+// Unterstützung für alte Schreibweise
+const stma_openlayers = StmaOpenLayers;
+
+// Beide Varianten exportieren
+export { StmaOpenLayers as default, stma_openlayers };

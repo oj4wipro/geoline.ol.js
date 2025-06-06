@@ -1,10 +1,10 @@
-import geolineOlJs from "../src/geoline.ol";
-//import geolineOlJs from "@stadtmessungsamt-stuttgart/geoline.ol.js";
+//import StmaOpenLayers from "@stadtmessungsamt-stuttgart/geoline.ol.js";
+import StmaOpenLayers from "../src/geoline.ol";
 import "../src/geoline.ol.css";
 
 var mymap;
 $(function() {
-	mymap = new geolineOlJs();
+	mymap = new StmaOpenLayers();
 	mymap.initMap(
 		25832,
 		{target: "the-map"},
