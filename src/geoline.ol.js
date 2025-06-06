@@ -45,23 +45,23 @@ import {register} from 'ol/proj/proj4';
  *	@since			v0.0
  */
 var stma_openlayers = /** @class */ (function () {
-	
+
 	function stma_openlayers(options) {
 		var _this = this;
 		return _this;
 	}
-	
+
 	// ----------------------------------------------------------------------------------
 	// Intern
 	// ----------------------------------------------------------------------------------
 	var projection = null;
 	var map = null;
 	var viewParams = null;
-	
+
 	var config = null;
-	
+
 	var tileLoadFunction = null;
-	
+
 	var overlayLayer = null;
 	var overlayLayers = []; //Layer, für die das Overlay aktiviert ist.
 	var overlayFunctions = []; //Funktionen der Layer, für die das Overlay aktiviert ist.
@@ -106,7 +106,7 @@ var stma_openlayers = /** @class */ (function () {
 		}
 		return config;
 	}
-	
+
 	//	@description	fügt einen EsriLayer hinzu. (gecacht + dynamisch)
 	//
 	//	@argument		_url {String}
@@ -127,7 +127,6 @@ var stma_openlayers = /** @class */ (function () {
 	//	@since			v0.0
 	var _addEsriLayer = function(_url, _layerParams, _sourceParams, _callbackFunction) {
 		var _self = this;
-		
 		//Infos zu dem AGS Kartendienst ermitteln
 		$.ajax({
 			url: _url + "?f=json",
@@ -135,14 +134,14 @@ var stma_openlayers = /** @class */ (function () {
 			dataType: "jsonp",
 			success: function (ags_info) {
 				//console.info(_url, ags_info);
-				
+
 				try {
-					
+
 					if (typeof(ags_info.error) != "undefined") {
 						console.warn("Eigenschaften des Kartendienstes " + _url + " konnten nicht abgerufen werden.", ags_info.error);
 						return;
 					}
-					
+
 					//Copyright
 					var url = new URL(_url);
 					if (jQuery.inArray(url.hostname, _getConfig().ags_hosts) > -1) {
@@ -150,7 +149,7 @@ var stma_openlayers = /** @class */ (function () {
 							ags_info.copyrightText = "© Stadtmessungsamt, LHS Stuttgart"
 						}
 					}
-					
+
 					//AGS Kartendienst von Esri?
 					if (url.hostname.indexOf("arcgisonline.com")>-1 || url.hostname.indexOf("arcgis.com")>-1) {
 						//Der Copyright-Vermerk muss immer sichtbar sein
@@ -160,7 +159,7 @@ var stma_openlayers = /** @class */ (function () {
 						_attributionControl.setCollapsible(false);
 						_attributionControl.setCollapsed(false);
 					}
-					
+
 					//spatialReference korrigieren für 10.0
 					if (ags_info.currentVersion == 10.05 && ags_info.spatialReference.latestWkid == null) {
 						switch (ags_info.spatialReference.wkid) {
@@ -169,12 +168,12 @@ var stma_openlayers = /** @class */ (function () {
 							break;
 						}
 					}
-					
+
 					//spatialReference überprüfen
 					if (projection != "EPSG:" + ags_info.spatialReference.wkid  && projection != "EPSG:" + ags_info.spatialReference.latestWkid) {
 						console.warn("Projektion der Karte und des Kartendienstes stimmen nicht überein. Karte: " + projection + ", Kartendienst: EPSG:", ags_info.spatialReference.wkid + " / EPSG:" + ags_info.spatialReference.latestWkid, _url);
 					}
-					
+
 					//Ist es ein gecachter Dienst?
 					if (ags_info.singleFusedMapCache == true) {
 						//-> gecachter Dienst hinzufügen
@@ -183,7 +182,7 @@ var stma_openlayers = /** @class */ (function () {
 						//-> dynamischer Dienst hinzufügen
 						_initDynamicLayer(_url, _layerParams, _sourceParams, ags_info, _callbackFunction);
 					}
-					
+
 				} catch (e) {
 					console.error("Fehler beim Initalisieren des Layers " + _url, e);
 				}
@@ -193,7 +192,7 @@ var stma_openlayers = /** @class */ (function () {
 			}
 		});
 	}
-	
+
 	//	@description	fügt einen gecachten WMTS-Kartendienst hinzu.
 	//
 	//	@argument		_url {String}
@@ -217,7 +216,7 @@ var stma_openlayers = /** @class */ (function () {
 	//	@since			v2.1
 	var _addWMTSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
 		var _self = this;
-		
+
 		//GetCapabilities abrufen
 		var url = new URL(_url);
 		$.ajax({
@@ -225,20 +224,20 @@ var stma_openlayers = /** @class */ (function () {
 			type: "POST",
 			success: function (wmtscapabilities) {
 				var _formatWMTSCapabilities = new formatWMTSCapabilities();
-				
+
 				//sourceParams
 				var sourceParams = sourceWMTS_optionsFromCapabilities(_formatWMTSCapabilities.read(wmtscapabilities), {
 					layer: _layerName
 				});
-				
+
 				//diese Parameter können nicht überdefiniert werden.
 				var predefinedSourceParams = {};
-				
+
 				if (jQuery.inArray(url.hostname, _getConfig().wmts_hosts) > -1) {
 					//URL-Parameter überdefinieren, da diese nicht korrekt ermittelt werden können.
 					predefinedSourceParams.urls = [ url.origin + url.pathname + "/rest/" + _layerName + "/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}?format=image/png" ];
 					predefinedSourceParams.requestEncoding = "REST";
-					
+
 					//Copyrighthinweis
 					predefinedSourceParams.attributions = "© Stadtmessungsamt, LHS Stuttgart";
 				}
@@ -268,7 +267,7 @@ var stma_openlayers = /** @class */ (function () {
 					..._layerParams,
 					...predefinedLayerParams
 				};
-				
+
 				//gecachten Layer erstellen
 				var layer = new layerTile(layerParams);
 
@@ -576,12 +575,12 @@ var stma_openlayers = /** @class */ (function () {
 		if (jQuery.inArray(url.hostname, _getConfig().ags_hosts) > -1) {
 			_zIndex = 50;
 		}
-		
+
 		//layerParams
 		var layerParams = {
 			zIndex: _zIndex //damit liegen die dynamischen Dienste über den gecachten Diensten (wenn nicht überkonfiguriert wird)
 		};
-		
+
 		//diese Parameter können nicht überdefiniert werden.
 		var predefinedLayerParams = {
 			source: new sourceImageArcGISRest(sourceParams)
@@ -596,73 +595,77 @@ var stma_openlayers = /** @class */ (function () {
 		var layer = new layerImage(layerParams);
 		//Layer hinzufügen
 		map.addLayer(layer);
-		
+
 		//Callbackfunktion ausführen
 		if (typeof _callbackFunction == "function") {
 			_callbackFunction(layer);
 		}
 	}
-	
+
 	// ----------------------------------------------------------------------------------
 	// Public
 	// ----------------------------------------------------------------------------------
-	
+
 	/**
-	 *	@method			initMap
-	 *	@description	initialisiert die Karte<br/>
-	 *					Beispiel:<br/>
-	 *					<code>mymap = new stma_openlayers();<br/>
-	 *					mymap.initMap(25832, {}, {});</code>
+	 *    @method            initMap
+	 *    @description    initialisiert die Karte<br/>
+	 *                    Beispiel:<br/>
+	 *                    <code>mymap = new stma_openlayers();<br/>
+	 *                    mymap.initMap(25832, {}, {});</code>
 	 *
-	 *	@argument		_epsgCode {int} EPSG-Code des Koordinatensystems.
-	 *					Unterstütze Werte sind: 25832, 3857<br/>
-	 *					Siehe auch: {@link https://epsg.io/25832}, {@link http://epsg.io/3857}
-	 *					
-	 *	@argument		_mapParams {object}
-	 *					zusätzliche Parameter für das OpenLayer-Map-Objekt<br/>
-	 *					Siehe {@link https://openlayers.org/en/v6.3.1/apidoc/module-ol_Map-Map.html}
+	 *    @argument        _epsgCode {int} EPSG-Code des Koordinatensystems.
+	 *                    Unterstütze Werte sind: 25832, 3857<br/>
+	 *                    Siehe auch: {@link https://epsg.io/25832}, {@link http://epsg.io/3857}
 	 *
-	 *	@argument		_viewParams {object}
-	 *					zusätzliche Parameter für das OpenLayer-View-Objekt<br/>
-	 *					Siehe {@link https://openlayers.org/en/v6.3.1/apidoc/module-ol_View-View.html}
+	 *    @argument        _mapParams {object}
+	 *                    zusätzliche Parameter für das OpenLayer-Map-Objekt<br/>
+	 *                    Siehe {@link https://openlayers.org/en/v6.3.1/apidoc/module-ol_Map-Map.html}
 	 *
-	 *	@argument		_customParams {object}
-	 *					zusätzliche Parameter für geoline.ol.js<br/>
-	 *					Unterstützte Parameter:
-	 *					<ul>
-	 *					<li>tileLoadFunction: Optionale Funktion, die bei gecachten Kartendiensten ausgeführt wird, um eine Kachel zu laden.<br/>
-	 *						Beispiel:<br/>
-	 *						<code>{ tileLoadFunction: function(imageTile, src) { imageTile.getImage().src = src;}}</code><br/>
-	 *						Siehe {@link https://openlayers.org/en/v6.3.1/apidoc/module-ol_source_XYZ-XYZ.html}
-	 *					</li>
+	 *    @argument        _viewParams {object}
+	 *                    zusätzliche Parameter für das OpenLayer-View-Objekt<br/>
+	 *                    Siehe {@link https://openlayers.org/en/v6.3.1/apidoc/module-ol_View-View.html}
 	 *
-	 *					<li>config: Hier kann das Konfigurationsobjekt, das normalerweise direkt vom Server des Stadtmessungsamtes geladen wird überschrieben werden.<br/>
-	 *						Diese Funktion sollte nur sparsam genutzt werden, zum Beispiel für die Offlineverfügbarkeit in Apps.<br/>
-	 *						Wird diese Funktion verwendet, so muss sichergestellt werden, dass die übergebene Konfiguration aktuell ist.
-	 *					</li>
-	 *					</ul>
+	 *    @argument        _customParams {object}
+	 *                    zusätzliche Parameter für geoline.ol.js<br/>
+	 *                    Unterstützte Parameter:
+	 *                    <ul>
+	 *                    <li>tileLoadFunction: Optionale Funktion, die bei gecachten Kartendiensten ausgeführt wird, um eine Kachel zu laden.<br/>
+	 *                        Beispiel:<br/>
+	 *                        <code>{ tileLoadFunction: function(imageTile, src) { imageTile.getImage().src = src;}}</code><br/>
+	 *                        Siehe {@link https://openlayers.org/en/v6.3.1/apidoc/module-ol_source_XYZ-XYZ.html}
+	 *                    </li>
 	 *
-	 *	@returns		{null} -
+	 *                    <li>config: Hier kann das Konfigurationsobjekt, das normalerweise direkt vom Server des Stadtmessungsamtes geladen wird überschrieben werden.<br/>
+	 *                        Diese Funktion sollte nur sparsam genutzt werden, zum Beispiel für die Offlineverfügbarkeit in Apps.<br/>
+	 *                        Wird diese Funktion verwendet, so muss sichergestellt werden, dass die übergebene Konfiguration aktuell ist.
+	 *                    </li>
+	 *                    </ul>
 	 *
-	 *	@since			v0.0
+	 *    @argument        _callbackFunction {function}
+	 *                    Möglichkeit, eine Funktion zu übergeben, die nach dem Hinzufügen des Layers ausgeführt wird.<br/>
+	 *                    Der Funktion wird das jeweilige Layerobjekt übergeben.
+	 *
+	 *    @returns        {null} -
+	 *
+	 *    @since            v0.0
 	 */
-	stma_openlayers.prototype.initMap = function(_epsgCode, _mapParams, _viewParams, _customParams) {
+	stma_openlayers.prototype.initMap = function(_epsgCode, _mapParams, _viewParams, _customParams, _callbackFunction) {
 		var _self = this;
-		
+
 		//(25832)UTM-Projektion zu den Projektionen von OpenLayers hinzufügen
 		proj4.defs("EPSG:25832", "+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
 		register(proj4);
-		
+
 		//(31467)GK-Projektion zu den Projektionen von OpenLayers hinzufügen
 		proj4.defs("EPSG:31467", "+proj=tmerc +lat_0=0 +lon_0=9 +k=1 +x_0=3500000 +y_0=0 +ellps=bessel +towgs84=598.1,73.7,418.2,0.202,0.045,-2.455,6.7 +units=m +no_defs");
 		register(proj4);
-	
+
 		//Projektion definieren
 		projection = "EPSG:" + _epsgCode;
 		if (getProjection(projection) == null) {
 			console.error("Projektion " + projection + " nicht gefunden. Es kann zu falscher Darstellung der Karte kommen");
 		}
-		
+
 		//zusätzliche Parameter für geoline.ol.js hinzufügen
 		if (_customParams != null && _customParams.tileLoadFunction != null) {
 			tileLoadFunction = _customParams.tileLoadFunction;
@@ -671,7 +674,7 @@ var stma_openlayers = /** @class */ (function () {
 			console.warn("Konfiguration wurde manuell gesetzt und wird nicht vom Server des Stadtmessungamtes geladen. Bitte stellen Sie sicher, dass die Konfiguration immer aktuell ist.");
 			config = _customParams.config;
 		}
-		
+
 		//Karte initialisieren
 		var mapParams = {
 			target: "map",
@@ -682,7 +685,7 @@ var stma_openlayers = /** @class */ (function () {
 				}
 			})
 		};
-		
+
 		//diese Parameter können nicht überdefiniert werden.
 		//Sie dürfen nicht geändert werden, da es sonst ggf. zu Problemen bei der Darstellung der Stadtmessungsamt-Kartendienste kommen kann.
 		var predefinedMapParams = {
@@ -713,7 +716,7 @@ var stma_openlayers = /** @class */ (function () {
 				}));
 			}
 		}
-		
+
 		//View definieren
 		viewParams = {
 			...{
@@ -728,16 +731,21 @@ var stma_openlayers = /** @class */ (function () {
 
 		//Karte definieren
 		map = new Map(mapParams);
-		
+
 		//Rechtsklick auf der Karte unterbinden
 		$(".ol-viewport").on("contextmenu", function(e) {
 			e.preventDefault();
 		});
-		
+
 		//Nach dem Start die Größe der Karte automatisch bestimmen
 		map.updateSize();
+
+		//Callbackfunktion ausführen
+		if (typeof _callbackFunction == "function") {
+			_callbackFunction(map);
+		}
 	}
-	
+
 	/**
 	 *	@method			addEsriLayer
 	 *	@description	fügt einen Kartendienst eines ArcGIS Servers (dynamisch / gecacht) hinzu.<br/>
@@ -772,7 +780,7 @@ var stma_openlayers = /** @class */ (function () {
 	 */
 	stma_openlayers.prototype.addEsriLayer = function(_url, _layerParams, _sourceParams, _callbackFunction) {
 		var _self = this;
-		
+
 		var url = new URL(_url);
 		if (jQuery.inArray(url.hostname, _getConfig().ags_hosts) > -1) {
 			console.error("Kartendienste des Stadtmessungsamtes über die Methode addStmaEsriLayer hinzufügen");
@@ -780,7 +788,7 @@ var stma_openlayers = /** @class */ (function () {
 			_addEsriLayer(_url, _layerParams, _sourceParams, _callbackFunction);
 		}
 	}
-	
+
 	/**
 	 *	@method			addWMTSLayer
 	 *	@description	fügt einen gecachten WMTS-Kartendienst hinzu.<br/>
@@ -818,7 +826,7 @@ var stma_openlayers = /** @class */ (function () {
 	 */
 	stma_openlayers.prototype.addWMTSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
 		var _self = this;
-		
+
 		var url = new URL(_url);
 		if (jQuery.inArray(url.hostname, _getConfig().wmts_hosts) > -1) {
 			console.error("WMTS-Kartendienste des Stadtmessungsamtes über die Methode addStmaWMTSLayer hinzufügen");
@@ -826,7 +834,7 @@ var stma_openlayers = /** @class */ (function () {
 			_addWMTSLayer(_url, _layerName, _layerParams, _sourceParams, _callbackFunction);
 		}
 	}
-	
+
 	/**
 	 *	@method			addWMSLayer
 	 *	@description	fügt einen dynamischen WMS-Kartendienst hinzu.<br/>
@@ -875,7 +883,7 @@ var stma_openlayers = /** @class */ (function () {
 	 */
 	stma_openlayers.prototype.addWMSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
 		var _self = this;
-		
+
 		var url = new URL(_url);
 		if (jQuery.inArray(url.hostname, _getConfig().wms_hosts) > -1) {
 			console.error("WMS-Kartendienste des Stadtmessungsamtes über die Methode addStmaWMSLayer hinzufügen");
@@ -883,7 +891,7 @@ var stma_openlayers = /** @class */ (function () {
 			_addWMSLayer(_url, _layerName, _layerParams, _sourceParams, _callbackFunction);
 		}
 	}
-	
+
 	/**
 	 *	@method			addStmaEsriLayer
 	 *	@description	fügt einen Kartendienst eines ArcGIS Servers (dynamisch / gecacht) des Stadtmessungsamtes hinzu.<br/>
@@ -919,10 +927,10 @@ var stma_openlayers = /** @class */ (function () {
 	 */
 	stma_openlayers.prototype.addStmaEsriLayer = function(_mapservice, _layerParams, _sourceParams, _callbackFunction) {
 		var _self = this;
-		
+
 		_addEsriLayer("https://" + _getConfig().ags_host + "/" + _getConfig().ags_instance + "/rest/services/" + _mapservice + "/MapServer", _layerParams, _sourceParams, _callbackFunction);
 	}
-	
+
 	/**
 	 *	@method			addStmaWMTSLayer
 	 *	@description	fügt einen gecachten WMTS-Kartendienst des Stadtmessungsamtes hinzu.<br/>
@@ -957,7 +965,7 @@ var stma_openlayers = /** @class */ (function () {
 	 */
 	stma_openlayers.prototype.addStmaWMTSLayer = function(_layerName, _layerParams, _sourceParams, _callbackFunction) {
 		var _self = this;
-		
+
 		//Matrix definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
 		if (_sourceParams == null) {
 			_sourceParams = {};
@@ -971,7 +979,7 @@ var stma_openlayers = /** @class */ (function () {
 		};
 		_addWMTSLayer("https://" + _getConfig().wmts_host + "/" + _getConfig().wmts_instance + "/gwc/service/wmts?REQUEST=GetCapabilities", _layerName, _layerParams, _sourceParams, _callbackFunction);
 	}
-	
+
 	/**
 	 *	@method			addStmaWMSLayer
 	 *	@description	fügt einen dynamischen WMS-Kartendienst des Stadtmessungsamtes hinzu.<br/>
@@ -1016,7 +1024,7 @@ var stma_openlayers = /** @class */ (function () {
 	 */
 	stma_openlayers.prototype.addStmaWMSLayer = function(_layerName, _layerParams, _sourceParams, _callbackFunction) {
 		var _self = this;
-		
+
 		//Tiled definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
 		if (_sourceParams == null) {
 			_sourceParams = {};
@@ -1030,7 +1038,7 @@ var stma_openlayers = /** @class */ (function () {
 		};
 		_addWMSLayer("https://" + _getConfig().wms_host + "/" + _getConfig().wms_instance, _layerName, _layerParams, _sourceParams, _callbackFunction);
 	}
-	
+
 	/**
 	 *	@method			addStmaBaseLayer
 	 *	@description	fügt einen Basis-Kartendienst (dynamisch / gecacht) des Stadtmessungsamtes hinzu.<br/>
@@ -1070,15 +1078,15 @@ var stma_openlayers = /** @class */ (function () {
 	 */
 	stma_openlayers.prototype.addStmaBaseLayer = function(_mapname, _layerParams, _sourceParams, _callbackFunction) {
 		var _self = this;
-		
+
 		if (_getConfig().ags_services != null && _getConfig().ags_services[_mapname] != null) {
 			_addEsriLayer("https://" + _getConfig().ags_services[_mapname].ags_host + "/" + _getConfig().ags_services[_mapname].ags_instance + "/rest/services/" + _getConfig().ags_services[_mapname].ags_service + "/MapServer", _layerParams, _sourceParams, _callbackFunction);
 		} else
 		if (_getConfig().wmts_services != null && _getConfig().wmts_services[_mapname] != null) {
-			
+
 			//GetCapabilities-URL
 			var _urlGetCapabilities = "https://" + _getConfig().wmts_services[_mapname].host + "/" + _getConfig().wmts_services[_mapname].instance + "/gwc/service/wmts?REQUEST=GetCapabilities"
-			
+
 			//Matrix definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
 			if (_sourceParams == null) {
 				_sourceParams = {};
@@ -1091,12 +1099,12 @@ var stma_openlayers = /** @class */ (function () {
 				..._predefinedSourceParams
 			};
 			_addWMTSLayer(_urlGetCapabilities, _getConfig().wmts_services[_mapname].service, _layerParams, _sourceParams, _callbackFunction);
-		} else 
+		} else
 		if (_getConfig().wms_services != null && _getConfig().wms_services[_mapname] != null) {
-			
+
 			//URL
 			var _url = "https://" + _getConfig().wms_services[_mapname].host + "/" + _getConfig().wms_services[_mapname].instance
-			
+
 			//Tiled definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
 			if (_sourceParams == null) {
 				_sourceParams = {};
@@ -1113,12 +1121,12 @@ var stma_openlayers = /** @class */ (function () {
 			console.error("Karte '" + _mapname + "' nicht gefunden");
 		}
 	}
-	
+
 	/**
 	 *	@method			addPoints
 	 *	@description	fügt einzelne Punkte hinzu.<br/>
 	 *					Wenn nichts anderes angegeben ist, dann gilt der zIndex 60.<br/>
-	 *					
+	 *
 	 *					Beispiel:<br/>
 	 *					<code>mymap.addPoints([[3513223, 5405026]], "images/target.png");</code>
 	 *
@@ -1136,7 +1144,7 @@ var stma_openlayers = /** @class */ (function () {
 	 *	@since			v0.0
 	 */
 	stma_openlayers.prototype.addPoints = function(_pointCoords, _imageURL, _callbackFunction) {
-		
+
 		var features = [];
 		for (var i=0; i < _pointCoords.length; i++) {
 			features.push(new Feature({
@@ -1157,17 +1165,17 @@ var stma_openlayers = /** @class */ (function () {
 			})
 		});
 		map.addLayer(vectorLayer);
-		
+
 		//Callbackfunktion ausführen
 		if (typeof _callbackFunction == "function") {
 			_callbackFunction(vectorLayer);
 		}
 	}
-	
+
 	/**
 	 *	@method			addGeoJSONfromURL
 	 *	@description	fügt Objekte aus einem geoJSON hinzu. Das geoJSON ist über eine URL erreichbar.<br/>
-	 *					
+	 *
 	 *					Beispiel:
 	 *					<code>mymap.addGeoJSONfromURL("examples/example.geojson");</code>
 	 *
@@ -1205,11 +1213,11 @@ var stma_openlayers = /** @class */ (function () {
 				}
 			});
 	}
-	
+
 	/**
 	 *	@method			addGeoJSON
 	 *	@description	fügt Objekte aus einem geoJSON hinzu.
-	 *					
+	 *
 	 *					Beispiel:
 	 *					<code>mymap.addGeoJSON(_geojson);</code>
 	 *
@@ -1237,12 +1245,12 @@ var stma_openlayers = /** @class */ (function () {
 				}
 			}
 		}
-		
+
 		//Bei urn:ogc:def:crs:OGC:1.3:CRS84 wird unter Verwendung von UTM(EPSG:25832) nicht korrekt transformiert.
 		if (_projectionGeoJSON == "urn:ogc:def:crs:OGC:1.3:CRS84") {
 			_projectionGeoJSON = "EPSG:4326";
 		}
-		
+
 		if (getProjection(_projectionGeoJSON) == null) {
 			console.error("Projektion " + _projectionGeoJSON + " nicht gefunden. Es kann zu falscher Darstellung der Karte kommen");
 		}
@@ -1251,19 +1259,19 @@ var stma_openlayers = /** @class */ (function () {
 			dataProjection: _projectionGeoJSON,
 			featureProjection: projection
 		})
-		
+
 		var _vectorSource = new sourceVector({
 			features: _geojsonFormat.readFeatures(_geojson)
 		});
-		
+
 		var vectorLayer = new layerVector({
 			zIndex: 60,
 			source: _vectorSource,
 			style: _style
 		});
-		
+
 		map.addLayer(vectorLayer);
-		
+
 		if (_zoomTo == true) {
 			//warte bis View bereit ist.
 			var zoomToInterval = window.setInterval(function() {
@@ -1273,17 +1281,17 @@ var stma_openlayers = /** @class */ (function () {
 				}
 			}, 500);
 		}
-		
+
 		//Callbackfunktion ausführen
 		if (typeof _callbackFunction == "function") {
 			_callbackFunction(vectorLayer);
 		}
 	}
-	
+
 	/**
 	 *	@method			addOverlayForLayer
 	 *	@description	Bietet die Möglichkeit an für einen Layer ein Overlay hinzuzufügen.
-	 *					
+	 *
 	 *					Beispiel:
 	 *					<code>mymap.addOverlayForLayer(_layer, _overlayFunction);</code>
 	 *
@@ -1298,7 +1306,7 @@ var stma_openlayers = /** @class */ (function () {
 	 *	@since			v1.2
 	 */
 	stma_openlayers.prototype.addOverlayForLayer = function(_layer, _overlayFunction) {
-		
+
 		//globaler Overlay-Layer hinzufügen
 		if (overlayLayer == null) {
 			if ($(map.getTargetElement()).find("#geoline_ol_js_popup").length == 0) {
@@ -1306,12 +1314,12 @@ var stma_openlayers = /** @class */ (function () {
 				$(map.getTargetElement()).append("<div id='geoline_ol_js_popup'/>");
 			}
 			var _overlayDIV = $(map.getTargetElement()).find("#geoline_ol_js_popup").get(0);
-			
+
 			overlayLayer = new Overlay({
 				element: _overlayDIV,
 			});
 			map.addOverlay(overlayLayer);
-			
+
 			map.on('click', function (evt) {
 				var featuredata = map.forEachFeatureAtPixel(
 					evt.pixel,
@@ -1334,15 +1342,15 @@ var stma_openlayers = /** @class */ (function () {
 				);
 				if (featuredata) {
 					var _overlayFunction = overlayFunctions[overlayLayers.indexOf(featuredata.layer)];
-					
+
 					$(overlayLayer.getElement()).html(
-						'<div class="arrow"></div>' + 
+						'<div class="arrow"></div>' +
 						'<div class="content">' + _overlayFunction(featuredata.feature) + '</div>'
 					);
-			
+
 					overlayLayer.setPosition(evt.coordinate);
 					$(_overlayDIV).show();
-					
+
 					var _transform = "translate3d(-" + $(_overlayDIV).width()/2 + "px, calc(-" + $(_overlayDIV).height() + "px - 0.5rem), 0px)";
 					$(_overlayDIV).css("transform", _transform);
 				} else {
@@ -1350,14 +1358,14 @@ var stma_openlayers = /** @class */ (function () {
 				}
 			});
 		}
-		
+
 		//Füge Layer zu den Layern hinzu, für die das Overlay aktiviert ist.
 		if (!overlayLayers.includes(_layer)) {
 			overlayLayers.push(_layer);
 			overlayFunctions[overlayLayers.indexOf(_layer)] = _overlayFunction;
 		}
 	}
-	
+
 	/**
 	 *	@method			addStmaEsriFeatureLayer
 	 *	@description	fügt einen Kartendienst eines ArcGIS Servers (dynamisch / gecacht) des Stadtmessungsamtes hinzu.
@@ -1368,7 +1376,7 @@ var stma_openlayers = /** @class */ (function () {
 	 *					<li>40: dynamisch</li>
 	 *					<li>50: dynamisch - Kartendienst des Stadtmessungsamtes</li>
 	 *					</ul>
-	 *					
+	 *
 	 *					Beispiel:<br/>
 	 *					<code>mymap.addStmaEsriFeatureLayer("1_Base/Stadtkarte_Internet_c");</code>
 	 *
@@ -1397,15 +1405,15 @@ var stma_openlayers = /** @class */ (function () {
 	 */
 	stma_openlayers.prototype.addStmaEsriFeatureLayer = function(_mapservice, _layerId, _styleFunction, _callbackFunction) {
 		var _self = this;
-		
+
 		var _epsgCode = projection.replace("EPSG:", "");
-		
+
 		var _esrijsonFormat = new formatEsriJSON();
-		
+
 		var vectorSource = new sourceVector({
 			loader: function(_extent, _resolution, _projection) {
 				var _url = "https://" + _getConfig().ags_host + "/" + _getConfig().ags_instance + "/rest/services/" + _mapservice + "/MapServer/" + _layerId + "/query/";
-				
+
 				var _urlParams = {
 					"f": "json",
 					"returnGeometry": true,
@@ -1416,7 +1424,7 @@ var stma_openlayers = /** @class */ (function () {
 					"outFields": "*",
 					"outSR": _epsgCode
 				};
-				
+
 				$.ajax({
 					method: "POST",
 					url: _url,
@@ -1446,15 +1454,15 @@ var stma_openlayers = /** @class */ (function () {
 			source: vectorSource,
 			style: _styleFunction
 		});
-		
+
 		map.addLayer(vectorLayer);
-		
+
 		//Callbackfunktion ausführen
 		if (typeof _callbackFunction == "function") {
 			_callbackFunction(vectorLayer);
 		}
 	}
-	
+
 	/**
 	 *	@method			getMap
 	 *	@description	gibt das OpenLayer-Map-Objekt zurück.<br/>
@@ -1468,7 +1476,7 @@ var stma_openlayers = /** @class */ (function () {
 	stma_openlayers.prototype.getMap = function() {
 		return map;
 	}
-	
+
 	/**
 	 *	@method			getConfig
 	 *	@description	gibt die interne Konfiguration von geoline.ol.js zurück.<br/>
@@ -1481,7 +1489,7 @@ var stma_openlayers = /** @class */ (function () {
 	stma_openlayers.prototype.getConfig = function() {
 		return _getConfig();
 	}
-	
+
 	return stma_openlayers;
 }());
 export default stma_openlayers;

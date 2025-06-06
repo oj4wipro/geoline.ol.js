@@ -17,7 +17,6 @@ $(function() {
 
 	const mousePosition = new MousePosition({
 		coordinateFormat: function(coordinate) {
-			console.error(coordinate);
 			return (Math.round(coordinate[0] * 1000) / 1000).toString() + " / " +
 				(Math.round(coordinate[1] * 1000) / 1000).toString()
 		}
