@@ -235,19 +235,19 @@ var stma_openlayers = /** @class */ (function () {
 					...predefinedSourceParams
 				};
 
-				var _zIndex = 10;
+				let _zIndex = 10;
 				//anderer zIndex für Stadtmessungsamt-Kartendienste
 				if (_getConfig().wmts_hosts.includes(url.hostname)) {
 					_zIndex = 20;
 				}
 
 				//layerParams
-				var layerParams = {
+				let layerParams = {
 					zIndex: _zIndex
 				};
 
 				//diese Parameter können nicht überdefiniert werden.
-				var predefinedLayerParams = {
+				let predefinedLayerParams = {
 					source: new sourceWMTS(sourceParams)
 				};
 				layerParams = {
@@ -257,7 +257,7 @@ var stma_openlayers = /** @class */ (function () {
 				};
 
 				//gecachten Layer erstellen
-				var layer = new layerTile(layerParams);
+				let layer = new layerTile(layerParams);
 
 				//View konfigurieren, falls diese noch nicht konfiguriert wurde
 				if (map.getView().getProjection().getCode() != projection) {
@@ -332,22 +332,23 @@ var stma_openlayers = /** @class */ (function () {
 		};
 
 		//Der Layer kann gekachelt oder als ganzes Bild abgerufen werden.
+		let layer;
 		if (sourceParams.TILED == true) {
 			//gekachelter Abruf = gecacht
 
-			var _zIndex = 10;
+			let _zIndex = 10;
 			//anderer zIndex für Stadtmessungsamt-Kartendienste
 			if (_getConfig().wms_hosts.includes(url.hostname)) {
 				_zIndex = 20;
 			}
 
 			//layerParams
-			var layerParams = {
+			let layerParams = {
 				zIndex: _zIndex
 			};
 
 			//diese Parameter können nicht überdefiniert werden.
-			var predefinedLayerParams = {
+			let predefinedLayerParams = {
 				source: new sourceTileWMS(sourceParams)
 			};
 			layerParams = {
@@ -357,24 +358,24 @@ var stma_openlayers = /** @class */ (function () {
 			};
 
 			//Layer erstellen
-			var layer = new layerTile(layerParams);
+			layer = new layerTile(layerParams);
 
 		} else {
 			//Abruf als ein Bild = dynamisch
 
-			var _zIndex = 40;
+			let _zIndex = 40;
 			//anderer zIndex für Stadtmessungsamt-Kartendienste
 			if (_getConfig().wms_hosts.includes(url.hostname)) {
 				_zIndex = 50;
 			}
 
 			//layerParams
-			var layerParams = {
+			let layerParams = {
 				zIndex: _zIndex
 			};
 
 			//diese Parameter können nicht überdefiniert werden.
-			var predefinedLayerParams = {
+			let predefinedLayerParams = {
 				source: new sourceImageWMS(sourceParams)
 			};
 			layerParams = {
@@ -384,7 +385,7 @@ var stma_openlayers = /** @class */ (function () {
 			};
 
 			//Layer erstellen
-			var layer = new layerImage(layerParams);
+			layer = new layerImage(layerParams);
 		}
 
 		//View konfigurieren, falls diese noch nicht konfiguriert wurde
@@ -479,19 +480,19 @@ var stma_openlayers = /** @class */ (function () {
 			...predefinedSourceParams
 		};
 
-		var _zIndex = 10;
+		let _zIndex = 10;
 		var url = new URL(_url);
 		if (_getConfig().ags_hosts.includes(url.hostname)) {
 			_zIndex = 20;
 		}
 
 		//layerParams
-		var layerParams = {
+		let layerParams = {
 			zIndex: _zIndex
 		};
 
 		//diese Parameter können nicht überdefiniert werden.
-		var predefinedLayerParams = {
+		let predefinedLayerParams = {
 			source: new sourceXYZ(sourceParams)
 		};
 		layerParams = {
@@ -501,7 +502,7 @@ var stma_openlayers = /** @class */ (function () {
 		};
 
 		//gecachten Layer erstellen
-		var layer = new layerTile(layerParams);
+		let layer = new layerTile(layerParams);
 
 		//Layer hinzufügen
 		map.addLayer(layer);
@@ -552,19 +553,19 @@ var stma_openlayers = /** @class */ (function () {
 		};
 
 		//layerParams
-		var _zIndex = 40;
+		let _zIndex = 40;
 		var url = new URL(_url);
 		if (_getConfig().ags_hosts.includes(url.hostname)) {
 			_zIndex = 50;
 		}
 
 		//layerParams
-		var layerParams = {
+		let layerParams = {
 			zIndex: _zIndex //damit liegen die dynamischen Dienste über den gecachten Diensten (wenn nicht überkonfiguriert wird)
 		};
 
 		//diese Parameter können nicht überdefiniert werden.
-		var predefinedLayerParams = {
+		let predefinedLayerParams = {
 			source: new sourceImageArcGISRest(sourceParams)
 		};
 		layerParams = {
@@ -574,7 +575,7 @@ var stma_openlayers = /** @class */ (function () {
 		};
 
 		//dynamischen Layer erstellen
-		var layer = new layerImage(layerParams);
+		let layer = new layerImage(layerParams);
 		//Layer hinzufügen
 		map.addLayer(layer);
 
@@ -1057,12 +1058,11 @@ var stma_openlayers = /** @class */ (function () {
 			if (_sourceParams == null) {
 				_sourceParams = {};
 			}
-			var _predefinedSourceParams = {
-				matrixSet: _getConfig().wmts_services[_mapname].matrix
-			}
 			_sourceParams = {
 				..._sourceParams,
-				..._predefinedSourceParams
+				...{
+					matrixSet: _getConfig().wmts_services[_mapname].matrix
+				}
 			};
 			_addWMTSLayer(_urlGetCapabilities, _getConfig().wmts_services[_mapname].service, _layerParams, _sourceParams, _callbackFunction);
 		} else
@@ -1075,12 +1075,11 @@ var stma_openlayers = /** @class */ (function () {
 			if (_sourceParams == null) {
 				_sourceParams = {};
 			}
-			var _predefinedSourceParams = {
-				TILED: _getConfig().wms_services[_mapname].tiled
-			}
 			_sourceParams = {
 				..._sourceParams,
-				..._predefinedSourceParams
+				...{
+					TILED: _getConfig().wms_services[_mapname].tiled
+				}
 			};
 			_addWMSLayer(_url, _getConfig().wms_services[_mapname].service, _layerParams, _sourceParams, _callbackFunction);
 		} else {
