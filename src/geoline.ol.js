@@ -124,71 +124,64 @@ var stma_openlayers = /** @class */ (function () {
 	//
 	//	@since			v0.0
 	var _addEsriLayer = function(_url, _layerParams, _sourceParams, _callbackFunction) {
-		var _self = this;
-		//Infos zu dem AGS Kartendienst ermitteln
-		$.ajax({
-			url: _url + "?f=json",
-			type: "POST",
-			dataType: "jsonp",
-			success: function (ags_info) {
-				//console.info(_url, ags_info);
+		const jsonp = require('jsonp');
+		jsonp(_url + "?f=json", null, (err, ags_info) => {
+			if (err) {
+				console.error("Fehler beim Abrufen der Informationen des AGS-Diensts", err);
+				return;
+			}
 
-				try {
-
-					if (typeof(ags_info.error) != "undefined") {
-						console.warn("Eigenschaften des Kartendienstes " + _url + " konnten nicht abgerufen werden.", ags_info.error);
-						return;
-					}
-
-					//Copyright
-					var url = new URL(_url);
-					if (_getConfig().ags_hosts.includes(url.hostname)) {
-						if (ags_info.copyrightText == null || ags_info.copyrightText.length === 0) {
-							ags_info.copyrightText = "© Stadtmessungsamt, LHS Stuttgart"
-						}
-					}
-
-					//AGS Kartendienst von Esri?
-					if (url.hostname.indexOf("arcgisonline.com")>-1 || url.hostname.indexOf("arcgis.com")>-1) {
-						//Der Copyright-Vermerk muss immer sichtbar sein
-						var _attributionControl = map.getControls().getArray().filter(function(_control) {
-							return controlAttribution.prototype.isPrototypeOf(_control);
-						})[0];
-						_attributionControl.setCollapsible(false);
-						_attributionControl.setCollapsed(false);
-					}
-
-					//spatialReference korrigieren für 10.0
-					if (ags_info.currentVersion == 10.05 && ags_info.spatialReference.latestWkid == null) {
-						switch (ags_info.spatialReference.wkid) {
-							case 102100:
-								ags_info.spatialReference.latestWkid = 3857;
-							break;
-						}
-					}
-
-					//spatialReference überprüfen
-					if (projection != "EPSG:" + ags_info.spatialReference.wkid  && projection != "EPSG:" + ags_info.spatialReference.latestWkid) {
-						console.warn("Projektion der Karte und des Kartendienstes stimmen nicht überein. Karte: " + projection + ", Kartendienst: EPSG:", ags_info.spatialReference.wkid + " / EPSG:" + ags_info.spatialReference.latestWkid, _url);
-					}
-
-					//Ist es ein gecachter Dienst?
-					if (ags_info.singleFusedMapCache == true) {
-						//-> gecachter Dienst hinzufügen
-						_initCachedLayer(_url, _layerParams, _sourceParams, ags_info, _callbackFunction);
-					} else {
-						//-> dynamischer Dienst hinzufügen
-						_initDynamicLayer(_url, _layerParams, _sourceParams, ags_info, _callbackFunction);
-					}
-
-				} catch (e) {
-					console.error("Fehler beim Initalisieren des Layers " + _url, e);
+			try {
+				if (typeof(ags_info.error) != "undefined") {
+					console.warn("Eigenschaften des Kartendienstes " + _url + " konnten nicht abgerufen werden.", ags_info.error);
+					return;
 				}
-			},
-			error: function (xhr, status) {
-				console.error("OHOH", xhr, status);
+
+				//Copyright
+				var url = new URL(_url);
+				if (_getConfig().ags_hosts.includes(url.hostname)) {
+					if (ags_info.copyrightText == null || ags_info.copyrightText.length === 0) {
+						ags_info.copyrightText = "© Stadtmessungsamt, LHS Stuttgart"
+					}
+				}
+
+				//AGS Kartendienst von Esri?
+				if (url.hostname.indexOf("arcgisonline.com")>-1 || url.hostname.indexOf("arcgis.com")>-1) {
+					//Der Copyright-Vermerk muss immer sichtbar sein
+					var _attributionControl = map.getControls().getArray().filter(function(_control) {
+						return controlAttribution.prototype.isPrototypeOf(_control);
+					})[0];
+					_attributionControl.setCollapsible(false);
+					_attributionControl.setCollapsed(false);
+				}
+
+				//spatialReference korrigieren für 10.0
+				if (ags_info.currentVersion === 10.05 && ags_info.spatialReference.latestWkid == null) {
+					switch (ags_info.spatialReference.wkid) {
+						case 102100:
+							ags_info.spatialReference.latestWkid = 3857;
+							break;
+					}
+				}
+
+				//spatialReference überprüfen
+				if (projection !== "EPSG:" + ags_info.spatialReference.wkid  && projection !== "EPSG:" + ags_info.spatialReference.latestWkid) {
+					console.warn("Projektion der Karte und des Kartendienstes stimmen nicht überein. Karte: " + projection + ", Kartendienst: EPSG:", ags_info.spatialReference.wkid + " / EPSG:" + ags_info.spatialReference.latestWkid, _url);
+				}
+
+				//Ist es ein gecachter Dienst?
+				if (ags_info.singleFusedMapCache === true) {
+					//-> gecachter Dienst hinzufügen
+					_initCachedLayer(_url, _layerParams, _sourceParams, ags_info, _callbackFunction);
+				} else {
+					//-> dynamischer Dienst hinzufügen
+					_initDynamicLayer(_url, _layerParams, _sourceParams, ags_info, _callbackFunction);
+				}
+			} catch (e) {
+				console.error("Fehler beim Initalisieren des Layers " + _url, e);
 			}
 		});
+
 	}
 
 	//	@description	fügt einen gecachten WMTS-Kartendienst hinzu.
