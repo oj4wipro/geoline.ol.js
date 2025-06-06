@@ -627,7 +627,7 @@ let StmaOpenLayers = /** @class */ (function () {
 	 *
 	 *    @since            v0.0
 	 */
-	StmaOpenLayers.prototype.initMap = function(_epsgCode, _mapParams, _viewParams, _customParams, _callbackFunction) {
+	StmaOpenLayers.prototype.initMap = function(_epsgCode, _mapParams = {}, _viewParams = {}, _customParams = {}, _callbackFunction = null) {
 		//(25832)UTM-Projektion zu den Projektionen von OpenLayers hinzufügen
 		proj4.defs("EPSG:25832", "+proj=utm +zone=32 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
 		register(proj4);
@@ -754,7 +754,7 @@ let StmaOpenLayers = /** @class */ (function () {
 	 *
 	 *	@since			v0.0
 	 */
-	StmaOpenLayers.prototype.addEsriLayer = function(_url, _layerParams, _sourceParams, _callbackFunction) {
+	StmaOpenLayers.prototype.addEsriLayer = function(_url, _layerParams = {}, _sourceParams = {}, _callbackFunction = null) {
 		const url = new URL(_url);
 		if (_getConfig().ags_hosts.includes(url.hostname)) {
 			console.error("Kartendienste des Stadtmessungsamtes über die Methode addStmaEsriLayer hinzufügen");
@@ -798,7 +798,7 @@ let StmaOpenLayers = /** @class */ (function () {
 	 *
 	 *	@since			v2.1
 	 */
-	StmaOpenLayers.prototype.addWMTSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
+	StmaOpenLayers.prototype.addWMTSLayer = function(_url, _layerName = {}, _layerParams = {}, _sourceParams = {}, _callbackFunction = null) {
 		const url = new URL(_url);
 		if (_getConfig().wmts_hosts.includes(url.hostname)) {
 			console.error("WMTS-Kartendienste des Stadtmessungsamtes über die Methode addStmaWMTSLayer hinzufügen");
@@ -853,7 +853,7 @@ let StmaOpenLayers = /** @class */ (function () {
 	 *
 	 *	@since			v2.1
 	 */
-	StmaOpenLayers.prototype.addWMSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
+	StmaOpenLayers.prototype.addWMSLayer = function(_url, _layerName, _layerParams = {}, _sourceParams = {}, _callbackFunction = null) {
 		const url = new URL(_url);
 		if (_getConfig().wms_hosts.includes(url.hostname)) {
 			console.error("WMS-Kartendienste des Stadtmessungsamtes über die Methode addStmaWMSLayer hinzufügen");
@@ -895,7 +895,7 @@ let StmaOpenLayers = /** @class */ (function () {
 	 *
 	 *	@since			v0.0
 	 */
-	StmaOpenLayers.prototype.addStmaEsriLayer = function(_mapservice, _layerParams, _sourceParams, _callbackFunction) {
+	StmaOpenLayers.prototype.addStmaEsriLayer = function(_mapservice, _layerParams = {}, _sourceParams = {}, _callbackFunction = null) {
 		_addEsriLayer("https://" + _getConfig().ags_host + "/" + _getConfig().ags_instance + "/rest/services/" + _mapservice + "/MapServer", _layerParams, _sourceParams, _callbackFunction);
 	}
 
@@ -931,7 +931,7 @@ let StmaOpenLayers = /** @class */ (function () {
 	 *
 	 *	@since			v2.1
 	 */
-	StmaOpenLayers.prototype.addStmaWMTSLayer = function(_layerName, _layerParams, _sourceParams, _callbackFunction) {
+	StmaOpenLayers.prototype.addStmaWMTSLayer = function(_layerName, _layerParams = {}, _sourceParams = {}, _callbackFunction = null) {
 		//Matrix definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
 		if (_sourceParams == null) {
 			_sourceParams = {};
@@ -988,7 +988,7 @@ let StmaOpenLayers = /** @class */ (function () {
 	 *
 	 *	@since			v2.1
 	 */
-	StmaOpenLayers.prototype.addStmaWMSLayer = function(_layerName, _layerParams, _sourceParams, _callbackFunction) {
+	StmaOpenLayers.prototype.addStmaWMSLayer = function(_layerName, _layerParams = {}, _sourceParams = {}, _callbackFunction = null) {
 		//Tiled definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
 		if (_sourceParams == null) {
 			_sourceParams = {};
@@ -1040,7 +1040,7 @@ let StmaOpenLayers = /** @class */ (function () {
 	 *
 	 *	@since			v0.0
 	 */
-	StmaOpenLayers.prototype.addStmaBaseLayer = function(_mapname, _layerParams, _sourceParams, _callbackFunction) {
+	StmaOpenLayers.prototype.addStmaBaseLayer = function(_mapname, _layerParams = {}, _sourceParams = {}, _callbackFunction = null) {
 		if (_getConfig().ags_services != null && _getConfig().ags_services[_mapname] != null) {
 			_addEsriLayer("https://" + _getConfig().ags_services[_mapname].ags_host + "/" + _getConfig().ags_services[_mapname].ags_instance + "/rest/services/" + _getConfig().ags_services[_mapname].ags_service + "/MapServer", _layerParams, _sourceParams, _callbackFunction);
 		} else
@@ -1103,7 +1103,7 @@ let StmaOpenLayers = /** @class */ (function () {
 	 *
 	 *	@since			v0.0
 	 */
-	StmaOpenLayers.prototype.addPoints = function(_pointCoords, _imageURL, _callbackFunction) {
+	StmaOpenLayers.prototype.addPoints = function(_pointCoords, _imageURL, _callbackFunction = null) {
 
 		let features = [];
 		for (let i=0; i < _pointCoords.length; i++) {
@@ -1156,7 +1156,7 @@ let StmaOpenLayers = /** @class */ (function () {
 	 *
 	 *    @since            v2.0
 	 */
-	StmaOpenLayers.prototype.addGeoJSONfromURL = function(_url, _zoomTo, _style, _callbackFunction) {
+	StmaOpenLayers.prototype.addGeoJSONfromURL = function(_url, _zoomTo = false, _style = {}, _callbackFunction = null) {
 		fetch(_url)
 			.then(response => {
 				if (!response.ok) {
@@ -1200,7 +1200,7 @@ let StmaOpenLayers = /** @class */ (function () {
 	 *
 	 *    @since            v2.0
 	 */
-	StmaOpenLayers.prototype.addGeoJSON = function(_geojson, _zoomTo, _style, _callbackFunction) {
+	StmaOpenLayers.prototype.addGeoJSON = function(_geojson, _zoomTo = false, _style = {}, _callbackFunction = null) {
 
 		let _projectionGeoJSON = "EPSG:4326";
 		//Wurde das Koordinatensystem angegeben?
@@ -1271,11 +1271,11 @@ let StmaOpenLayers = /** @class */ (function () {
 	 *
 	 *	@since			v1.2
 	 */
-	StmaOpenLayers.prototype.addOverlayForLayer = function(_layer, _overlayFunction) {
+	StmaOpenLayers.prototype.addOverlayForLayer = function(_layer, _overlayFunction = null) {
 
 		//globaler Overlay-Layer hinzufügen
 		if (overlayLayer == null) {
-			if (document.querySelector(map.getTargetElement()).querySelector("#geoline_ol_js_popup") === null) {
+			if (map.getTargetElement().querySelector("#geoline_ol_js_popup") === null) {
 				// Element für Overlay definieren
 				map.getTargetElement().insertAdjacentHTML('beforeend', '<div id="geoline_ol_js_popup"></div>');
 			}
@@ -1363,7 +1363,7 @@ let StmaOpenLayers = /** @class */ (function () {
 	 *
 	 *	@since			v0.86
 	 */
-	StmaOpenLayers.prototype.addStmaEsriFeatureLayer = function(_mapservice, _layerId, _styleFunction, _callbackFunction) {
+	StmaOpenLayers.prototype.addStmaEsriFeatureLayer = function(_mapservice, _layerId, _styleFunction = null, _callbackFunction = null) {
 		const _epsgCode = projection.replace("EPSG:", "");
 
 		const _esrijsonFormat = new FormatEsriJSON();
