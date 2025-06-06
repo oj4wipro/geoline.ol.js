@@ -70,39 +70,37 @@ var stma_openlayers = /** @class */ (function () {
 	//
 	//	@since			v0.0
 	var _getConfig = function() {
-		var _self = this;
 		if (config == null) {
-			$.ajax({
-				method: "POST",
-				url: "https://gis5.stuttgart.de/geoline/geoline.config/config.aspx",
-				data: {
-					v: "@version@",
-					epsg: projection,
-					url: location.href
-				},
-				dataType: "json",
-				async: false,
-				cache: false,
-				success: function (_data) {
+			// Weil fetch immer asynchron ist, wird synchron mit XMLHttpRequest gearbeitet
+			const xhr = new XMLHttpRequest();
+			xhr.open("POST", "https://gis5.stuttgart.de/geoline/geoline.config/config.aspx", false); // false = synchronous
+			xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+			const params = new URLSearchParams({
+				v: "@version@",
+				epsg: projection,
+				url: location.href
+			}).toString();
+			xhr.send(params);
 
-					_data.ags_hosts = Array.isArray(_data.ags_services)
-						? _data.ags_services.map(item => item.ags_host)
-						: Object.values(_data.ags_services || {}).map(item => item.ags_host);
+			if (xhr.status === 200) {
+				const _data = JSON.parse(xhr.responseText);
 
-					_data.wmts_hosts = Array.isArray(_data.wmts_services)
-						? _data.wmts_services.map(item => item.host)
-						: Object.values(_data.wmts_services || {}).map(item => item.host);
+				_data.ags_hosts = Array.isArray(_data.ags_services)
+					? _data.ags_services.map(item => item.ags_host)
+					: Object.values(_data.ags_services || {}).map(item => item.ags_host);
 
-					_data.wms_hosts = Array.isArray(_data.wms_services)
-						? _data.wms_services.map(item => item.host)
-						: Object.values(_data.wms_services || {}).map(item => item.host);
+				_data.wmts_hosts = Array.isArray(_data.wmts_services)
+					? _data.wmts_services.map(item => item.host)
+					: Object.values(_data.wmts_services || {}).map(item => item.host);
 
-					config = _data;
-				},
-				error: function (xhr, status) {
-					console.error("OHOH", xhr, status);
-				}
-			});
+				_data.wms_hosts = Array.isArray(_data.wms_services)
+					? _data.wms_services.map(item => item.host)
+					: Object.values(_data.wms_services || {}).map(item => item.host);
+
+				config = _data;
+			} else {
+				console.error("Konfiguration (geoline.config) konnte nicht geladen werden", xhr.status, xhr.statusText);
+			}
 		}
 		return config;
 	}
