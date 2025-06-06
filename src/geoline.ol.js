@@ -29,8 +29,6 @@ import proj4 from "proj4";
 import {get as getProjection} from "ol/proj";
 import {register} from 'ol/proj/proj4';
 
-import jquery from "jquery";
-window.$ = window.jQuery = jquery;
 
 /**
  *	version			@version@
@@ -207,10 +205,17 @@ let StmaOpenLayers = /** @class */ (function () {
 	const _addWMTSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
 		//GetCapabilities abrufen
 		const url = new URL(_url);
-		$.ajax({
-			url: _url,
-			type: "POST",
-			success: function (wmtscapabilities) {
+
+		fetch(_url, {
+			method: 'POST'
+		})
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('Network response was not ok: ' + response.status);
+				}
+				return response.text();
+			})
+			.then(wmtscapabilities => {
 				const _formatWMTSCapabilities = new FormatWMTSCapabilities();
 
 				//sourceParams
@@ -270,11 +275,10 @@ let StmaOpenLayers = /** @class */ (function () {
 				if (typeof _callbackFunction == "function") {
 					_callbackFunction(layer);
 				}
-			},
-			error: function (xhr, status) {
-				console.error("Fehler beim Abrufen der WMTS-GetCapabilities", xhr, status);
-			}
-		});
+			})
+			.catch(error => {
+				console.error("Fehler beim Abrufen der WMTS-GetCapabilities", error);
+			});
 	}
 
 	//	@description	fügt einen dynamischen WMS-Kartendienst hinzu.
@@ -1383,21 +1387,26 @@ let StmaOpenLayers = /** @class */ (function () {
 					"outSR": _epsgCode
 				};
 
-				$.ajax({
-					method: "POST",
-					url: _url,
-					data: _urlParams,
-					dataType: 'jsonp',
-					success: function(_response) {
-						if (_response.error) {
-							alert(_response.error.message + '\n' + _response.error.details.join('\n'));
-						} else {
-							const features = _esrijsonFormat.readFeatures(_response, {
-								featureProjection: _projection
-							});
-							if (features.length > 0) {
-								vectorSource.addFeatures(features);
-							}
+				// Create URL with parameters
+				const queryString = new URLSearchParams(_urlParams).toString();
+				const fullUrl = _url + '?' + queryString;
+
+				// Use the jsonp module that's already imported in the file
+				const jsonp = require('jsonp');
+				jsonp(fullUrl, null, (err, _response) => {
+					if (err) {
+						console.error("Error fetching JSONP data:", err);
+						return;
+					}
+
+					if (_response.error) {
+						alert(_response.error.message + '\n' + _response.error.details.join('\n'));
+					} else {
+						const features = _esrijsonFormat.readFeatures(_response, {
+							featureProjection: _projection
+						});
+						if (features.length > 0) {
+							vectorSource.addFeatures(features);
 						}
 					}
 				});
