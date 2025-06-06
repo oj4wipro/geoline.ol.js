@@ -2,9 +2,6 @@
  @module stma_openlayers
  */
 
-import jquery from "jquery";
-window.$ = window.jQuery = jquery;
-
 import Feature from "ol/Feature";
 import Map from "ol/Map";
 import Overlay from "ol/Overlay";
@@ -31,6 +28,9 @@ import {defaults as defaultControls} from 'ol/control';
 import proj4 from "proj4";
 import {get as getProjection} from "ol/proj";
 import {register} from 'ol/proj/proj4';
+
+import jquery from "jquery";
+window.$ = window.jQuery = jquery;
 
 /**
  *	version			@version@
@@ -256,7 +256,7 @@ const stma_openlayers = /** @class */ (function () {
 				let layer = new layerTile(layerParams);
 
 				//View konfigurieren, falls diese noch nicht konfiguriert wurde
-				if (map.getView().getProjection().getCode() != projection) {
+				if (map.getView().getProjection().getCode() !== projection) {
 					map.setView(new View({
 						...viewParams,
 						...{ resolutions: sourceParams.tileGrid.getResolutions(), constrainResolution: true}
@@ -329,7 +329,7 @@ const stma_openlayers = /** @class */ (function () {
 
 		//Der Layer kann gekachelt oder als ganzes Bild abgerufen werden.
 		let layer;
-		if (sourceParams.TILED == true) {
+		if (sourceParams.TILED === true) {
 			//gekachelter Abruf = gecacht
 
 			let _zIndex = 10;
@@ -438,7 +438,7 @@ const stma_openlayers = /** @class */ (function () {
 		const tileGrid = new TileGrid(params);
 
 		//View konfigurieren, falls diese noch nicht konfiguriert wurde
-		if (map.getView().getProjection().getCode() != projection) {
+		if (map.getView().getProjection().getCode() !== projection) {
 			map.setView(new View({
 				...viewParams,
 				...{ resolutions: resolutions, constrainResolution: true}
@@ -446,11 +446,10 @@ const stma_openlayers = /** @class */ (function () {
 		}
 
 		//Projektion ermitteln
-		let EPSGProjection;
 		if (ags_info.spatialReference.latestWkid != null) {
-			EPSGProjection = ags_info.spatialReference.latestWkid;
+			projection = ags_info.spatialReference.latestWkid;
 		} else {
-			EPSGProjection = ags_info.spatialReference.wkid;
+			projection = ags_info.spatialReference.wkid;
 		}
 
 		//sourceParams
@@ -462,7 +461,7 @@ const stma_openlayers = /** @class */ (function () {
 		//diese Parameter können nicht überdefiniert werden.
 		let predefinedSourceParams = {
 			tileGrid: tileGrid,
-			projection: getProjection("EPSG:" + EPSGProjection),
+			projection: getProjection("EPSG:" + projection),
 			attributions: ags_info.copyrightText,
 			url: _url + '/tile/{z}/{y}/{x}'
 		};
@@ -710,7 +709,7 @@ const stma_openlayers = /** @class */ (function () {
 		map = new Map(mapParams);
 
 		//Rechtsklick auf der Karte unterbinden
-		$(".ol-viewport").on("contextmenu", function(e) {
+		document.querySelector(".ol-viewport").addEventListener("contextmenu", function(e) {
 			e.preventDefault();
 		});
 
@@ -1276,11 +1275,11 @@ const stma_openlayers = /** @class */ (function () {
 
 		//globaler Overlay-Layer hinzufügen
 		if (overlayLayer == null) {
-			if ($(map.getTargetElement()).find("#geoline_ol_js_popup").length == 0) {
-				//Element für Overlay definieren
-				$(map.getTargetElement()).append("<div id='geoline_ol_js_popup'/>");
+			if (document.querySelector(map.getTargetElement()).querySelector("#geoline_ol_js_popup") === null) {
+				// Element für Overlay definieren
+				map.getTargetElement().insertAdjacentHTML('beforeend', '<div id="geoline_ol_js_popup"></div>');
 			}
-			const _overlayDIV = $(map.getTargetElement()).find("#geoline_ol_js_popup").get(0);
+			const _overlayDIV = map.getTargetElement().querySelector("#geoline_ol_js_popup");
 
 			overlayLayer = new Overlay({
 				element: _overlayDIV,
@@ -1299,29 +1298,23 @@ const stma_openlayers = /** @class */ (function () {
 					{
 						layerFilter: function(_layerCandidate) {
 							//Filter, damit nur die Features gefunden werden, für die auch der Overlay aktiviert wurde.
-							if (overlayLayers.includes(_layerCandidate)) {
-								return true;
-							} else {
-								return false;
-							}
+							return overlayLayers.includes(_layerCandidate);
 						}
 					}
 				);
 				if (featuredata) {
 					const _overlayFunction = overlayFunctions[overlayLayers.indexOf(featuredata.layer)];
 
-					$(overlayLayer.getElement()).html(
+					overlayLayer.getElement().innerHTML =
 						'<div class="arrow"></div>' +
-						'<div class="content">' + _overlayFunction(featuredata.feature) + '</div>'
-					);
+						'<div class="content">' + _overlayFunction(featuredata.feature) + '</div>';
 
 					overlayLayer.setPosition(evt.coordinate);
-					$(_overlayDIV).show();
+					_overlayDIV.style.display = 'block';
 
-					const _transform = "translate3d(-" + $(_overlayDIV).width()/2 + "px, calc(-" + $(_overlayDIV).height() + "px - 0.5rem), 0px)";
-					$(_overlayDIV).css("transform", _transform);
+					_overlayDIV.style.transform = "translate3d(-" + _overlayDIV.offsetWidth / 2 + "px, calc(-" + _overlayDIV.offsetHeight + "px - 0.5rem), 0px)";
 				} else {
-					$(_overlayDIV).hide();
+					_overlayDIV.style.display = 'none';
 				}
 			});
 		}
