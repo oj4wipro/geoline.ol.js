@@ -44,7 +44,7 @@ import {register} from 'ol/proj/proj4';
  *
  *	@since			v0.0
  */
-var stma_openlayers = /** @class */ (function () {
+const stma_openlayers = /** @class */ (function () {
 
 	function stma_openlayers() {
 		return this;
@@ -53,22 +53,22 @@ var stma_openlayers = /** @class */ (function () {
 	// ----------------------------------------------------------------------------------
 	// Intern
 	// ----------------------------------------------------------------------------------
-	var projection = null;
-	var map = null;
-	var viewParams = null;
+	let projection = null;
+	let map = null;
+	let viewParams = null;
 
-	var config = null;
+	let config = null;
 
-	var tileLoadFunction = null;
+	let tileLoadFunction = null;
 
-	var overlayLayer = null;
-	var overlayLayers = []; //Layer, für die das Overlay aktiviert ist.
-	var overlayFunctions = []; //Funktionen der Layer, für die das Overlay aktiviert ist.
+	let overlayLayer = null;
+	let overlayLayers = []; //Layer, für die das Overlay aktiviert ist.
+	let overlayFunctions = []; //Funktionen der Layer, für die das Overlay aktiviert ist.
 
 	//	@description	holt die Konfiguration in Abhängigkeit des EPSG-Codes von unserem Internetserver ab.
 	//
 	//	@since			v0.0
-	var _getConfig = function() {
+	const _getConfig = function() {
 		if (config == null) {
 			// Weil fetch immer asynchron ist, wird synchron mit XMLHttpRequest gearbeitet
 			const xhr = new XMLHttpRequest();
@@ -122,7 +122,7 @@ var stma_openlayers = /** @class */ (function () {
 	//					Der Funktion wird das jeweilige Layerobjekt übergeben.
 	//
 	//	@since			v0.0
-	var _addEsriLayer = function(_url, _layerParams, _sourceParams, _callbackFunction) {
+	const _addEsriLayer = function(_url, _layerParams, _sourceParams, _callbackFunction) {
 		const jsonp = require('jsonp');
 		jsonp(_url + "?f=json", null, (err, ags_info) => {
 			if (err) {
@@ -131,13 +131,13 @@ var stma_openlayers = /** @class */ (function () {
 			}
 
 			try {
-				if (typeof(ags_info.error) != "undefined") {
+				if (ags_info.error !== undefined) {
 					console.warn("Eigenschaften des Kartendienstes " + _url + " konnten nicht abgerufen werden.", ags_info.error);
 					return;
 				}
 
 				//Copyright
-				var url = new URL(_url);
+				const url = new URL(_url);
 				if (_getConfig().ags_hosts.includes(url.hostname)) {
 					if (ags_info.copyrightText == null || ags_info.copyrightText.length === 0) {
 						ags_info.copyrightText = "© Stadtmessungsamt, LHS Stuttgart"
@@ -147,7 +147,7 @@ var stma_openlayers = /** @class */ (function () {
 				//AGS Kartendienst von Esri?
 				if (url.hostname.indexOf("arcgisonline.com")>-1 || url.hostname.indexOf("arcgis.com")>-1) {
 					//Der Copyright-Vermerk muss immer sichtbar sein
-					var _attributionControl = map.getControls().getArray().filter(function(_control) {
+					const _attributionControl = map.getControls().getArray().filter(function(_control) {
 						return controlAttribution.prototype.isPrototypeOf(_control);
 					})[0];
 					_attributionControl.setCollapsible(false);
@@ -204,23 +204,22 @@ var stma_openlayers = /** @class */ (function () {
 	//					Der Funktion wird das jeweilige Layerobjekt übergeben.
 	//
 	//	@since			v2.1
-	var _addWMTSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
+	const _addWMTSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
 		//GetCapabilities abrufen
-		var url = new URL(_url);
+		const url = new URL(_url);
 		$.ajax({
 			url: _url,
 			type: "POST",
 			success: function (wmtscapabilities) {
-				var _formatWMTSCapabilities = new formatWMTSCapabilities();
+				const _formatWMTSCapabilities = new formatWMTSCapabilities();
 
 				//sourceParams
-				var sourceParams = sourceWMTS_optionsFromCapabilities(_formatWMTSCapabilities.read(wmtscapabilities), {
+				let sourceParams = sourceWMTS_optionsFromCapabilities(_formatWMTSCapabilities.read(wmtscapabilities), {
 					layer: _layerName
 				});
 
-				//diese Parameter können nicht überdefiniert werden.
-				var predefinedSourceParams = {};
-
+				let _zIndex = 10;
+				let predefinedSourceParams = {};
 				if (_getConfig().wmts_hosts.includes(url.hostname)) {
 					//URL-Parameter überdefinieren, da diese nicht korrekt ermittelt werden können.
 					predefinedSourceParams.urls = [ url.origin + url.pathname + "/rest/" + _layerName + "/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}?format=image/png" ];
@@ -228,18 +227,15 @@ var stma_openlayers = /** @class */ (function () {
 
 					//Copyrighthinweis
 					predefinedSourceParams.attributions = "© Stadtmessungsamt, LHS Stuttgart";
+
+					//anderer zIndex für Stadtmessungsamt-Kartendienste
+					_zIndex = 20;
 				}
 				sourceParams = {
 					...sourceParams,
 					..._sourceParams,
 					...predefinedSourceParams
 				};
-
-				let _zIndex = 10;
-				//anderer zIndex für Stadtmessungsamt-Kartendienste
-				if (_getConfig().wmts_hosts.includes(url.hostname)) {
-					_zIndex = 20;
-				}
 
 				//layerParams
 				let layerParams = {
@@ -307,19 +303,19 @@ var stma_openlayers = /** @class */ (function () {
 	//					Der Funktion wird das jeweilige Layerobjekt übergeben.
 	//
 	//	@since			v2.1
-	var _addWMSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
+	const _addWMSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
 		//sourceParams
-		var sourceParams = {
+		let sourceParams = {
 			url: _url,
 			params: {"LAYERS": _layerName }
 		};
 
 		//diese Parameter können nicht überdefiniert werden.
-		var predefinedSourceParams = {
+		const predefinedSourceParams = {
 			ratio: 1
 		};
 
-		var url = new URL(_url);
+		const url = new URL(_url);
 		if (_getConfig().wms_hosts.includes(url.hostname)) {
 			//Copyrighthinweis
 			predefinedSourceParams.attributions = "© Stadtmessungsamt, LHS Stuttgart";
@@ -426,20 +422,20 @@ var stma_openlayers = /** @class */ (function () {
 	//					Der Funktion wird das jeweilige Layerobjekt übergeben.
 	//
 	//	@since			v0.0
-	var _initCachedLayer = function (_url, _layerParams, _sourceParams, ags_info, _callbackFunction) {
-		var resolutions = [];
+	const _initCachedLayer = function (_url, _layerParams, _sourceParams, ags_info, _callbackFunction) {
+		let resolutions = [];
 		ags_info.tileInfo.lods.forEach(function(lod) {
 			resolutions.push(lod.resolution);
 		});
 
-		var params =  {
+		const params =  {
 			origin: [ags_info.tileInfo.origin.x, ags_info.tileInfo.origin.y],
 			extent: [ags_info.fullExtent.xmin, ags_info.fullExtent.ymin, ags_info.fullExtent.xmax, ags_info.fullExtent.ymax],
 			minZoom: 0,
 			resolutions: resolutions,
 			tileSize: [ags_info.tileInfo.rows, ags_info.tileInfo.cols]
 		};
-		var tileGrid = new TileGrid(params);
+		const tileGrid = new TileGrid(params);
 
 		//View konfigurieren, falls diese noch nicht konfiguriert wurde
 		if (map.getView().getProjection().getCode() != projection) {
@@ -450,23 +446,23 @@ var stma_openlayers = /** @class */ (function () {
 		}
 
 		//Projektion ermitteln
-		var projection;
+		let EPSGProjection;
 		if (ags_info.spatialReference.latestWkid != null) {
-			projection = ags_info.spatialReference.latestWkid;
+			EPSGProjection = ags_info.spatialReference.latestWkid;
 		} else {
-			projection = ags_info.spatialReference.wkid;
+			EPSGProjection = ags_info.spatialReference.wkid;
 		}
 
 		//sourceParams
-		var sourceParams = {
+		let sourceParams = {
 			minZoom: '0'
 		};
 
 		//ToDo: XYZ-Dienst vorsehen? Anderer Server + Instanz?
 		//diese Parameter können nicht überdefiniert werden.
-		var predefinedSourceParams = {
+		let predefinedSourceParams = {
 			tileGrid: tileGrid,
-			projection: getProjection("EPSG:" + projection),
+			projection: getProjection("EPSG:" + EPSGProjection),
 			attributions: ags_info.copyrightText,
 			url: _url + '/tile/{z}/{y}/{x}'
 		};
@@ -481,7 +477,7 @@ var stma_openlayers = /** @class */ (function () {
 		};
 
 		let _zIndex = 10;
-		var url = new URL(_url);
+		const url = new URL(_url);
 		if (_getConfig().ags_hosts.includes(url.hostname)) {
 			_zIndex = 20;
 		}
@@ -534,14 +530,14 @@ var stma_openlayers = /** @class */ (function () {
 	//					Der Funktion wird das jeweilige Layerobjekt übergeben.
 	//
 	//	@since			v0.0
-	var _initDynamicLayer = function (_url, _layerParams, _sourceParams, ags_info, _callbackFunction) {
+	const _initDynamicLayer = function (_url, _layerParams, _sourceParams, ags_info, _callbackFunction) {
 		//sourceParams
-		var sourceParams = {
+		let sourceParams = {
 			params: {layers: 'show:0'}
 		};
 
 		//diese Parameter können nicht überdefiniert werden.
-		var predefinedSourceParams = {
+		let predefinedSourceParams = {
 			ratio: 1,
 			url: _url,
 			attributions: [ags_info.copyrightText]
@@ -554,7 +550,7 @@ var stma_openlayers = /** @class */ (function () {
 
 		//layerParams
 		let _zIndex = 40;
-		var url = new URL(_url);
+		const url = new URL(_url);
 		if (_getConfig().ags_hosts.includes(url.hostname)) {
 			_zIndex = 50;
 		}
@@ -657,7 +653,7 @@ var stma_openlayers = /** @class */ (function () {
 		}
 
 		//Karte initialisieren
-		var mapParams = {
+		let mapParams = {
 			target: "map",
 			controls: defaultControls({
 				attribution: true,
@@ -669,7 +665,7 @@ var stma_openlayers = /** @class */ (function () {
 
 		//diese Parameter können nicht überdefiniert werden.
 		//Sie dürfen nicht geändert werden, da es sonst ggf. zu Problemen bei der Darstellung der Stadtmessungsamt-Kartendienste kommen kann.
-		var predefinedMapParams = {
+		let predefinedMapParams = {
 			logo: false,
 			pixelRatio: 1, //wichtige Einstellung für unsere Kartendienste!
 			loadTilesWhileAnimating: true, //Kacheln während des Zoomens nachladen
@@ -684,13 +680,13 @@ var stma_openlayers = /** @class */ (function () {
 		//Sicherstellen, dass der Attribution-Control vorhanden ist.
 		//Dieser muss vorhanden sein, wenn Karten von ESRI genutzt werden.
 		if (mapParams.controls != null) {
-			var _attributionControlAvailable = false;
+			let _attributionControlAvailable = false;
 			mapParams.controls.forEach(function(_control) {
 				if (controlAttribution.prototype.isPrototypeOf(_control)) {
 					_attributionControlAvailable = true;
 				}
 			});
-			if (_attributionControlAvailable == false) {
+			if (_attributionControlAvailable === false) {
 				//Attribution-Control hinzufügen
 				mapParams.controls.push(new controlAttribution({
 					tipLabel: "Copyright"
@@ -760,7 +756,7 @@ var stma_openlayers = /** @class */ (function () {
 	 *	@since			v0.0
 	 */
 	stma_openlayers.prototype.addEsriLayer = function(_url, _layerParams, _sourceParams, _callbackFunction) {
-		var url = new URL(_url);
+		const url = new URL(_url);
 		if (_getConfig().ags_hosts.includes(url.hostname)) {
 			console.error("Kartendienste des Stadtmessungsamtes über die Methode addStmaEsriLayer hinzufügen");
 		} else {
@@ -804,7 +800,7 @@ var stma_openlayers = /** @class */ (function () {
 	 *	@since			v2.1
 	 */
 	stma_openlayers.prototype.addWMTSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
-		var url = new URL(_url);
+		const url = new URL(_url);
 		if (_getConfig().wmts_hosts.includes(url.hostname)) {
 			console.error("WMTS-Kartendienste des Stadtmessungsamtes über die Methode addStmaWMTSLayer hinzufügen");
 		} else {
@@ -859,7 +855,7 @@ var stma_openlayers = /** @class */ (function () {
 	 *	@since			v2.1
 	 */
 	stma_openlayers.prototype.addWMSLayer = function(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
-		var url = new URL(_url);
+		const url = new URL(_url);
 		if (_getConfig().wms_hosts.includes(url.hostname)) {
 			console.error("WMS-Kartendienste des Stadtmessungsamtes über die Methode addStmaWMSLayer hinzufügen");
 		} else {
@@ -941,7 +937,7 @@ var stma_openlayers = /** @class */ (function () {
 		if (_sourceParams == null) {
 			_sourceParams = {};
 		}
-		var _predefinedSourceParams = {
+		const _predefinedSourceParams = {
 			matrixSet: _getConfig().wmts_matrix
 		}
 		_sourceParams = {
@@ -998,7 +994,7 @@ var stma_openlayers = /** @class */ (function () {
 		if (_sourceParams == null) {
 			_sourceParams = {};
 		}
-		var _predefinedSourceParams = {
+		const _predefinedSourceParams = {
 			TILED: _getConfig().wms_tiled
 		}
 		_sourceParams = {
@@ -1052,7 +1048,7 @@ var stma_openlayers = /** @class */ (function () {
 		if (_getConfig().wmts_services != null && _getConfig().wmts_services[_mapname] != null) {
 
 			//GetCapabilities-URL
-			var _urlGetCapabilities = "https://" + _getConfig().wmts_services[_mapname].host + "/" + _getConfig().wmts_services[_mapname].instance + "/gwc/service/wmts?REQUEST=GetCapabilities"
+			const _urlGetCapabilities = "https://" + _getConfig().wmts_services[_mapname].host + "/" + _getConfig().wmts_services[_mapname].instance + "/gwc/service/wmts?REQUEST=GetCapabilities"
 
 			//Matrix definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
 			if (_sourceParams == null) {
@@ -1069,7 +1065,7 @@ var stma_openlayers = /** @class */ (function () {
 		if (_getConfig().wms_services != null && _getConfig().wms_services[_mapname] != null) {
 
 			//URL
-			var _url = "https://" + _getConfig().wms_services[_mapname].host + "/" + _getConfig().wms_services[_mapname].instance
+			const _url = "https://" + _getConfig().wms_services[_mapname].host + "/" + _getConfig().wms_services[_mapname].instance
 
 			//Tiled definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
 			if (_sourceParams == null) {
@@ -1110,14 +1106,14 @@ var stma_openlayers = /** @class */ (function () {
 	 */
 	stma_openlayers.prototype.addPoints = function(_pointCoords, _imageURL, _callbackFunction) {
 
-		var features = [];
-		for (var i=0; i < _pointCoords.length; i++) {
+		let features = [];
+		for (let i=0; i < _pointCoords.length; i++) {
 			features.push(new Feature({
 				geometry: new geomPoint(_pointCoords[i])
 			}));
 		}
 
-		var vectorLayer = new layerVector({
+		const vectorLayer = new layerVector({
 			zIndex: 60,
 			source: new sourceVector({
 				features: features
@@ -1138,25 +1134,28 @@ var stma_openlayers = /** @class */ (function () {
 	}
 
 	/**
-	 *	@method			addGeoJSONfromURL
-	 *	@description	fügt Objekte aus einem geoJSON hinzu. Das geoJSON ist über eine URL erreichbar.<br/>
+	 *    @method            addGeoJSONfromURL
+	 *    @description    fügt Objekte aus einem geoJSON hinzu. Das geoJSON ist über eine URL erreichbar.<br/>
 	 *
-	 *					Beispiel:
-	 *					<code>mymap.addGeoJSONfromURL("examples/example.geojson");</code>
+	 *                    Beispiel:
+	 *                    <code>mymap.addGeoJSONfromURL("examples/example.geojson");</code>
 	 *
-	 *	@argument		_url {String} URL zur geoJSON-Datei
+	 *    @argument        _url {String} URL zur geoJSON-Datei
 	 *
-	 *	@argument		_style {object} (optional) Ausprägungs-Details<br/>
-	 *					Siehe {@link https://openlayers.org/en/v6.3.1/apidoc/module-ol_style_Style-Style.html}
+	 *    @argument        _zoomTo {boolean}
+	 *                     Passt den sichtbaren Bereich der Karte so an, dass alle Objekte der Vektorquelle vollständig sichtbar sind
 	 *
-	 *	@argument		_callbackFunction {function}
-	 *					Möglichkeit, eine Funktion zu übergeben, die nach dem Hinzufügen des Layers ausgeführt wird.
-	 *					Der Funktion wird das jeweilige Layerobjekt übergeben. Der Funktion wird false übergeben, wenn das GeoJSON
-	 *					nicht abgerufen werden konnte.
+	 *    @argument        _style {object} (optional) Ausprägungs-Details<br/>
+	 *                    Siehe {@link https://openlayers.org/en/v6.3.1/apidoc/module-ol_style_Style-Style.html}
 	 *
-	 *	@returns		{null} -
+	 *    @argument        _callbackFunction {function}
+	 *                    Möglichkeit, eine Funktion zu übergeben, die nach dem Hinzufügen des Layers ausgeführt wird.
+	 *                    Der Funktion wird das jeweilige Layerobjekt übergeben. Der Funktion wird false übergeben, wenn das GeoJSON
+	 *                    nicht abgerufen werden konnte.
 	 *
-	 *	@since			v2.0
+	 *    @returns        {null} -
+	 *
+	 *    @since            v2.0
 	 */
 	stma_openlayers.prototype.addGeoJSONfromURL = function(_url, _zoomTo, _style, _callbackFunction) {
 		fetch(_url)
@@ -1180,28 +1179,31 @@ var stma_openlayers = /** @class */ (function () {
 	}
 
 	/**
-	 *	@method			addGeoJSON
-	 *	@description	fügt Objekte aus einem geoJSON hinzu.
+	 *    @method            addGeoJSON
+	 *    @description    fügt Objekte aus einem geoJSON hinzu.
 	 *
-	 *					Beispiel:
-	 *					<code>mymap.addGeoJSON(_geojson);</code>
+	 *                    Beispiel:
+	 *                    <code>mymap.addGeoJSON(_geojson);</code>
 	 *
-	 *	@argument		_geojson {object} GeoJSON-Objekt
+	 *    @argument        _geojson {object} GeoJSON-Objekt
 	 *
-	 *	@argument		_style {object} (optional) Ausprägungs-Details<br/>
-	 *					Siehe {@link https://openlayers.org/en/v6.3.1/apidoc/module-ol_style_Style-Style.html}
+	 *    @argument        _zoomTo {boolean}
+	 *                     Passt den sichtbaren Bereich der Karte so an, dass alle Objekte der Vektorquelle vollständig sichtbar sind
 	 *
-	 *	@argument		_callbackFunction {function}
-	 *					Möglichkeit, eine Funktion zu übergeben, die nach dem Hinzufügen des Layers ausgeführt wird.
-	 *					Der Funktion wird das jeweilige Layerobjekt übergeben.
+	 *    @argument        _style {object} (optional) Ausprägungs-Details<br/>
+	 *                    Siehe {@link https://openlayers.org/en/v6.3.1/apidoc/module-ol_style_Style-Style.html}
 	 *
-	 *	@returns		{null} -
+	 *    @argument        _callbackFunction {function}
+	 *                    Möglichkeit, eine Funktion zu übergeben, die nach dem Hinzufügen des Layers ausgeführt wird.
+	 *                    Der Funktion wird das jeweilige Layerobjekt übergeben.
 	 *
-	 *	@since			v2.0
+	 *    @returns        {null} -
+	 *
+	 *    @since            v2.0
 	 */
 	stma_openlayers.prototype.addGeoJSON = function(_geojson, _zoomTo, _style, _callbackFunction) {
 
-		var _projectionGeoJSON = "EPSG:4326";
+		let _projectionGeoJSON = "EPSG:4326";
 		//Wurde das Koordinatensystem angegeben?
 		if ("crs" in _geojson) {
 			if ("properties" in _geojson.crs) {
@@ -1212,7 +1214,7 @@ var stma_openlayers = /** @class */ (function () {
 		}
 
 		//Bei urn:ogc:def:crs:OGC:1.3:CRS84 wird unter Verwendung von UTM(EPSG:25832) nicht korrekt transformiert.
-		if (_projectionGeoJSON == "urn:ogc:def:crs:OGC:1.3:CRS84") {
+		if (_projectionGeoJSON === "urn:ogc:def:crs:OGC:1.3:CRS84") {
 			_projectionGeoJSON = "EPSG:4326";
 		}
 
@@ -1220,16 +1222,16 @@ var stma_openlayers = /** @class */ (function () {
 			console.error("Projektion " + _projectionGeoJSON + " nicht gefunden. Es kann zu falscher Darstellung der Karte kommen");
 		}
 
-		var _geojsonFormat = new formatGeoJSON({
+		const _geojsonFormat = new formatGeoJSON({
 			dataProjection: _projectionGeoJSON,
 			featureProjection: projection
 		})
 
-		var _vectorSource = new sourceVector({
+		const _vectorSource = new sourceVector({
 			features: _geojsonFormat.readFeatures(_geojson)
 		});
 
-		var vectorLayer = new layerVector({
+		const vectorLayer = new layerVector({
 			zIndex: 60,
 			source: _vectorSource,
 			style: _style
@@ -1237,10 +1239,10 @@ var stma_openlayers = /** @class */ (function () {
 
 		map.addLayer(vectorLayer);
 
-		if (_zoomTo == true) {
+		if (_zoomTo === true) {
 			//warte bis View bereit ist.
-			var zoomToInterval = window.setInterval(function() {
-				if (map.getView().getZoom() != "undefined") {
+			const zoomToInterval = window.setInterval(function() {
+				if (map.getView().getZoom() !== undefined) {
 					clearInterval(zoomToInterval);
 					map.getView().fit(_vectorSource.getExtent());
 				}
@@ -1278,7 +1280,7 @@ var stma_openlayers = /** @class */ (function () {
 				//Element für Overlay definieren
 				$(map.getTargetElement()).append("<div id='geoline_ol_js_popup'/>");
 			}
-			var _overlayDIV = $(map.getTargetElement()).find("#geoline_ol_js_popup").get(0);
+			const _overlayDIV = $(map.getTargetElement()).find("#geoline_ol_js_popup").get(0);
 
 			overlayLayer = new Overlay({
 				element: _overlayDIV,
@@ -1286,7 +1288,7 @@ var stma_openlayers = /** @class */ (function () {
 			map.addOverlay(overlayLayer);
 
 			map.on('click', function (evt) {
-				var featuredata = map.forEachFeatureAtPixel(
+				const featuredata = map.forEachFeatureAtPixel(
 					evt.pixel,
 					function (_feature, _layer) {
 						return {
@@ -1306,7 +1308,7 @@ var stma_openlayers = /** @class */ (function () {
 					}
 				);
 				if (featuredata) {
-					var _overlayFunction = overlayFunctions[overlayLayers.indexOf(featuredata.layer)];
+					const _overlayFunction = overlayFunctions[overlayLayers.indexOf(featuredata.layer)];
 
 					$(overlayLayer.getElement()).html(
 						'<div class="arrow"></div>' +
@@ -1316,7 +1318,7 @@ var stma_openlayers = /** @class */ (function () {
 					overlayLayer.setPosition(evt.coordinate);
 					$(_overlayDIV).show();
 
-					var _transform = "translate3d(-" + $(_overlayDIV).width()/2 + "px, calc(-" + $(_overlayDIV).height() + "px - 0.5rem), 0px)";
+					const _transform = "translate3d(-" + $(_overlayDIV).width()/2 + "px, calc(-" + $(_overlayDIV).height() + "px - 0.5rem), 0px)";
 					$(_overlayDIV).css("transform", _transform);
 				} else {
 					$(_overlayDIV).hide();
@@ -1349,7 +1351,7 @@ var stma_openlayers = /** @class */ (function () {
 	 *					Wenn die URL des Kartendienstes beispielsweise https://SERVER/ArcGIS/rest/services/ORDNER/KARTENDIENST/MapServer heißt,
 	 *					so sollte ORDNER/KARTENDIENST angegeben werden.
 	 *
-	 *	@argument		_layerId {Integer} LayerId im Kartendienst
+	 *	@argument		_layerId {integer} LayerId im Kartendienst
 	 *					Wenn die URL des Kartendienstes beispielsweise https://SERVER/ArcGIS/rest/services/ORDNER/KARTENDIENST/MapServer/LAYERID heißt,
 	 *					so sollte LAYERID angegeben werden.
 	 *
@@ -1369,15 +1371,15 @@ var stma_openlayers = /** @class */ (function () {
 	 *	@since			v0.86
 	 */
 	stma_openlayers.prototype.addStmaEsriFeatureLayer = function(_mapservice, _layerId, _styleFunction, _callbackFunction) {
-		var _epsgCode = projection.replace("EPSG:", "");
+		const _epsgCode = projection.replace("EPSG:", "");
 
-		var _esrijsonFormat = new formatEsriJSON();
+		const _esrijsonFormat = new formatEsriJSON();
 
-		var vectorSource = new sourceVector({
+		const vectorSource = new sourceVector({
 			loader: function(_extent, _resolution, _projection) {
-				var _url = "https://" + _getConfig().ags_host + "/" + _getConfig().ags_instance + "/rest/services/" + _mapservice + "/MapServer/" + _layerId + "/query/";
+				const _url = "https://" + _getConfig().ags_host + "/" + _getConfig().ags_instance + "/rest/services/" + _mapservice + "/MapServer/" + _layerId + "/query/";
 
-				var _urlParams = {
+				const _urlParams = {
 					"f": "json",
 					"returnGeometry": true,
 					"spatialRel": "esriSpatialRelIntersects",
@@ -1397,7 +1399,7 @@ var stma_openlayers = /** @class */ (function () {
 						if (_response.error) {
 							alert(_response.error.message + '\n' + _response.error.details.join('\n'));
 						} else {
-							var features = _esrijsonFormat.readFeatures(_response, {
+							const features = _esrijsonFormat.readFeatures(_response, {
 								featureProjection: _projection
 							});
 							if (features.length > 0) {
@@ -1412,7 +1414,7 @@ var stma_openlayers = /** @class */ (function () {
 			}))
 		});
 
-		var vectorLayer = new layerVector({
+		const vectorLayer = new layerVector({
 			zIndex: 60,
 			source: vectorSource,
 			style: _styleFunction
