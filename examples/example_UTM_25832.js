@@ -2,9 +2,8 @@
 import StmaOpenLayers from "../src/geoline.ol";
 import "../src/geoline.ol.css";
 
-var mymap;
 $(function() {
-	mymap = new StmaOpenLayers();
+	const mymap = new StmaOpenLayers();
 	mymap.initMap(
 		25832,
 		{target: "the-map"},

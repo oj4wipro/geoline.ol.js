@@ -5,9 +5,8 @@ import "../src/geoline.ol.css";
 import MousePosition from 'ol/control/MousePosition.js';
 import Zoom from 'ol/control/Zoom.js';
 
-var mymap;
 $(function() {
-	mymap = new StmaOpenLayers();
+	const mymap = new StmaOpenLayers();
 	mymap.initMap(3857, {}, {
 		center: [1021708, 6237140],
 		zoom: 12

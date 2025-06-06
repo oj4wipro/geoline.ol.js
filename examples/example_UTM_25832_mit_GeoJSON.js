@@ -10,15 +10,14 @@ import styleStyle from "ol/style/Style";
 import example_4326JSON from "./testdata/example_4326.json"
 const example_25832JSON_URL = "testdata/example_25832.json"
 
-var mymap;
 $(function() {
-	mymap = new StmaOpenLayers();
+	const mymap = new StmaOpenLayers();
 	mymap.initMap(25832, {}, {});
 	
 	mymap.addStmaBaseLayer("Grundkarte");
 				
 	//Aussehen definieren
-	var _styles = {
+	const _styles = {
 		"Point": new styleStyle({
 			image: new styleIcon({
 				anchor: [0.5, 1],
@@ -36,7 +35,7 @@ $(function() {
 			})
 		})
 	};
-	var _styleFunction = function (feature) {
+	const _styleFunction = function (feature) {
 		if (_styles[feature.getGeometry().getType()] == null) {
 			console.warn(feature.getGeometry().getType(), "-Stil nicht definiert.");
 		}
@@ -46,9 +45,9 @@ $(function() {
 	mymap.addGeoJSON(example_4326JSON, false, _styleFunction, function(_layer) {
 		if (_layer !== false) {
 			console.info("Features aus GeoJSON hinzugefügt.")
-			
-			var _overlayFunction = function(_feature) {
-				var _data = _feature.get("label"); //Es wird der Inhalt des Attributes label aus dem GeoJSON angezeigt.
+
+			const _overlayFunction = function(_feature) {
+				const _data = _feature.get("label"); //Es wird der Inhalt des Attributes label aus dem GeoJSON angezeigt.
 				if (_data != null) {
 					return _data;
 				} else {
