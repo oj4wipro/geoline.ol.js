@@ -66,40 +66,60 @@ let StmaOpenLayers = /** @class */ (function () {
 	//	@description	holt die Konfiguration in Abhängigkeit des EPSG-Codes von unserem Internetserver ab.
 	//
 	//	@since			v0.0
-	const _getConfig = function() {
-		if (config == null) {
-			// Weil fetch immer asynchron ist, wird synchron mit XMLHttpRequest gearbeitet
-			const xhr = new XMLHttpRequest();
-			xhr.open("POST", "https://gis5.stuttgart.de/geoline/geoline.config/config.aspx", false); // false = synchronous
-			xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-			const params = new URLSearchParams({
-				v: "@version@",
-				epsg: projection,
-				url: location.href
-			}).toString();
-			xhr.send(params);
-
-			if (xhr.status === 200) {
-				const _data = JSON.parse(xhr.responseText);
-
+	// Lädt die Konfiguration asynchron und cached das Ergebnis in einer Promise
+	let configPromise = null;
+	const _fetchConfig = function() {
+		if (config != null) {
+			return Promise.resolve(config);
+		}
+		if (configPromise) {
+			return configPromise;
+		}
+		const params = new URLSearchParams({
+			v: "@version@",
+			epsg: projection,
+			url: typeof location !== 'undefined' ? location.href : ''
+		}).toString();
+		configPromise = fetch("https://gis5.stuttgart.de/geoline/geoline.config/config.aspx", {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: params
+		})
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('Network response was not ok: ' + response.status);
+				}
+				return response.json();
+			})
+			.then(_data => {
 				_data.ags_hosts = Array.isArray(_data.ags_services)
 					? _data.ags_services.map(item => item.ags_host)
 					: Object.values(_data.ags_services || {}).map(item => item.ags_host);
-
 				_data.wmts_hosts = Array.isArray(_data.wmts_services)
 					? _data.wmts_services.map(item => item.host)
 					: Object.values(_data.wmts_services || {}).map(item => item.host);
-
 				_data.wms_hosts = Array.isArray(_data.wms_services)
 					? _data.wms_services.map(item => item.host)
 					: Object.values(_data.wms_services || {}).map(item => item.host);
-
 				config = _data;
-			} else {
-				console.error("Konfiguration (geoline.config) konnte nicht geladen werden", xhr.status, xhr.statusText);
-			}
+				return config;
+			})
+			.catch(err => {
+				console.error("Konfiguration (geoline.config) konnte nicht geladen werden", err);
+				// Fehler weiterreichen, aber Promise für spätere erneute Versuche zurücksetzen
+				configPromise = null;
+				throw err;
+			});
+		return configPromise;
+	}
+
+	const _getConfig = function() {
+		// Nicht mehr blockieren: Startet den asynchronen Ladevorgang, falls nötig
+		if (config == null) {
+			_fetchConfig().catch(() => {});
 		}
-		return config;
+		// Rückgabe des aktuell bekannten Werts (oder eines Platzhalters, damit Aufrufer nicht crashen)
+		return config || { ags_hosts: [], wmts_hosts: [], wms_hosts: [] };
 	}
 
 	//	@description	fügt einen EsriLayer hinzu. (gecacht + dynamisch)
@@ -136,7 +156,7 @@ let StmaOpenLayers = /** @class */ (function () {
 
 				//Copyright
 				const url = new URL(_url);
-				if (_getConfig().ags_hosts.includes(url.hostname)) {
+				if (((_getConfig().ags_hosts) || []).includes(url.hostname)) {
 					if (ags_info.copyrightText == null || ags_info.copyrightText.length === 0) {
 						ags_info.copyrightText = "© Stadtmessungsamt, LHS Stuttgart"
 					}
@@ -225,7 +245,7 @@ let StmaOpenLayers = /** @class */ (function () {
 
 				let _zIndex = 10;
 				let predefinedSourceParams = {};
-				if (_getConfig().wmts_hosts.includes(url.hostname)) {
+				if (((_getConfig().wmts_hosts) || []).includes(url.hostname)) {
 					//URL-Parameter überdefinieren, da diese nicht korrekt ermittelt werden können.
 					predefinedSourceParams.urls = [ url.origin + url.pathname + "/rest/" + _layerName + "/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}?format=image/png" ];
 					predefinedSourceParams.requestEncoding = "REST";
@@ -320,7 +340,7 @@ let StmaOpenLayers = /** @class */ (function () {
 		};
 
 		const url = new URL(_url);
-		if (_getConfig().wms_hosts.includes(url.hostname)) {
+		if (((_getConfig().wms_hosts) || []).includes(url.hostname)) {
 			//Copyrighthinweis
 			predefinedSourceParams.attributions = "© Stadtmessungsamt, LHS Stuttgart";
 		}
@@ -335,10 +355,10 @@ let StmaOpenLayers = /** @class */ (function () {
 		let layer;
 		if (sourceParams.TILED === true) {
 			//gekachelter Abruf = gecacht
-
+		
 			let _zIndex = 10;
 			//anderer zIndex für Stadtmessungsamt-Kartendienste
-			if (_getConfig().wms_hosts.includes(url.hostname)) {
+			if (((_getConfig().wms_hosts) || []).includes(url.hostname)) {
 				_zIndex = 20;
 			}
 
@@ -362,10 +382,10 @@ let StmaOpenLayers = /** @class */ (function () {
 
 		} else {
 			//Abruf als ein Bild = dynamisch
-
+		
 			let _zIndex = 40;
 			//anderer zIndex für Stadtmessungsamt-Kartendienste
-			if (_getConfig().wms_hosts.includes(url.hostname)) {
+			if (((_getConfig().wms_hosts) || []).includes(url.hostname)) {
 				_zIndex = 50;
 			}
 
@@ -481,7 +501,7 @@ let StmaOpenLayers = /** @class */ (function () {
 
 		let _zIndex = 10;
 		const url = new URL(_url);
-		if (_getConfig().ags_hosts.includes(url.hostname)) {
+		if (((_getConfig().ags_hosts) || []).includes(url.hostname)) {
 			_zIndex = 20;
 		}
 
@@ -554,7 +574,7 @@ let StmaOpenLayers = /** @class */ (function () {
 		//layerParams
 		let _zIndex = 40;
 		const url = new URL(_url);
-		if (_getConfig().ags_hosts.includes(url.hostname)) {
+		if (((_getConfig().ags_hosts) || []).includes(url.hostname)) {
 			_zIndex = 50;
 		}
 
@@ -653,6 +673,9 @@ let StmaOpenLayers = /** @class */ (function () {
 		if (_customParams != null && _customParams.config != null) {
 			console.warn("Konfiguration wurde manuell gesetzt und wird nicht vom Server des Stadtmessungamtes geladen. Bitte stellen Sie sicher, dass die Konfiguration immer aktuell ist.");
 			config = _customParams.config;
+		} else {
+			// Konfiguration frühzeitig laden (asynchron), um spätere Aufrufe zu beschleunigen
+			_fetchConfig().catch(() => {});
 		}
 
 		//Karte initialisieren
@@ -760,7 +783,7 @@ let StmaOpenLayers = /** @class */ (function () {
 	 */
 	StmaOpenLayers.prototype.addEsriLayer = function(_url, _layerParams = {}, _sourceParams = {}, _callbackFunction = null) {
 		const url = new URL(_url);
-		if (_getConfig().ags_hosts.includes(url.hostname)) {
+		if (((_getConfig().ags_hosts) || []).includes(url.hostname)) {
 			console.error("Kartendienste des Stadtmessungsamtes über die Methode addStmaEsriLayer hinzufügen");
 		} else {
 			_addEsriLayer(_url, _layerParams, _sourceParams, _callbackFunction);
@@ -804,7 +827,7 @@ let StmaOpenLayers = /** @class */ (function () {
 	 */
 	StmaOpenLayers.prototype.addWMTSLayer = function(_url, _layerName = {}, _layerParams = {}, _sourceParams = {}, _callbackFunction = null) {
 		const url = new URL(_url);
-		if (_getConfig().wmts_hosts.includes(url.hostname)) {
+		if (((_getConfig().wmts_hosts) || []).includes(url.hostname)) {
 			console.error("WMTS-Kartendienste des Stadtmessungsamtes über die Methode addStmaWMTSLayer hinzufügen");
 		} else {
 			_addWMTSLayer(_url, _layerName, _layerParams, _sourceParams, _callbackFunction);
@@ -859,7 +882,7 @@ let StmaOpenLayers = /** @class */ (function () {
 	 */
 	StmaOpenLayers.prototype.addWMSLayer = function(_url, _layerName, _layerParams = {}, _sourceParams = {}, _callbackFunction = null) {
 		const url = new URL(_url);
-		if (_getConfig().wms_hosts.includes(url.hostname)) {
+		if (((_getConfig().wms_hosts) || []).includes(url.hostname)) {
 			console.error("WMS-Kartendienste des Stadtmessungsamtes über die Methode addStmaWMSLayer hinzufügen");
 		} else {
 			_addWMSLayer(_url, _layerName, _layerParams, _sourceParams, _callbackFunction);
@@ -900,7 +923,13 @@ let StmaOpenLayers = /** @class */ (function () {
 	 *	@since			v0.0
 	 */
 	StmaOpenLayers.prototype.addStmaEsriLayer = function(_mapservice, _layerParams = {}, _sourceParams = {}, _callbackFunction = null) {
-		_addEsriLayer("https://" + _getConfig().ags_host + "/" + _getConfig().ags_instance + "/rest/services/" + _mapservice + "/MapServer", _layerParams, _sourceParams, _callbackFunction);
+		_fetchConfig()
+			.then(() => {
+				_addEsriLayer("https://" + _getConfig().ags_host + "/" + _getConfig().ags_instance + "/rest/services/" + _mapservice + "/MapServer", _layerParams, _sourceParams, _callbackFunction);
+			})
+			.catch(err => {
+				console.error("Konfiguration (geoline.config) konnte nicht geladen werden – addStmaEsriLayer wird übersprungen", err);
+			});
 	}
 
 	/**
@@ -936,18 +965,24 @@ let StmaOpenLayers = /** @class */ (function () {
 	 *	@since			v2.1
 	 */
 	StmaOpenLayers.prototype.addStmaWMTSLayer = function(_layerName, _layerParams = {}, _sourceParams = {}, _callbackFunction = null) {
-		//Matrix definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
-		if (_sourceParams == null) {
-			_sourceParams = {};
-		}
-		const _predefinedSourceParams = {
-			matrixSet: _getConfig().wmts_matrix
-		}
-		_sourceParams = {
-			..._sourceParams,
-			..._predefinedSourceParams
-		};
-		_addWMTSLayer("https://" + _getConfig().wmts_host + "/" + _getConfig().wmts_instance + "/gwc/service/wmts?REQUEST=GetCapabilities", _layerName, _layerParams, _sourceParams, _callbackFunction);
+		_fetchConfig()
+			.then(() => {
+				//Matrix definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
+				if (_sourceParams == null) {
+					_sourceParams = {};
+				}
+				const _predefinedSourceParams = {
+					matrixSet: _getConfig().wmts_matrix
+				}
+				_sourceParams = {
+					..._sourceParams,
+					..._predefinedSourceParams
+				};
+				_addWMTSLayer("https://" + _getConfig().wmts_host + "/" + _getConfig().wmts_instance + "/gwc/service/wmts?REQUEST=GetCapabilities", _layerName, _layerParams, _sourceParams, _callbackFunction);
+			})
+			.catch(err => {
+				console.error("Konfiguration (geoline.config) konnte nicht geladen werden – addStmaWMTSLayer wird übersprungen", err);
+			});
 	}
 
 	/**
@@ -993,18 +1028,24 @@ let StmaOpenLayers = /** @class */ (function () {
 	 *	@since			v2.1
 	 */
 	StmaOpenLayers.prototype.addStmaWMSLayer = function(_layerName, _layerParams = {}, _sourceParams = {}, _callbackFunction = null) {
-		//Tiled definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
-		if (_sourceParams == null) {
-			_sourceParams = {};
-		}
-		const _predefinedSourceParams = {
-			TILED: _getConfig().wms_tiled
-		}
-		_sourceParams = {
-			..._sourceParams,
-			..._predefinedSourceParams
-		};
-		_addWMSLayer("https://" + _getConfig().wms_host + "/" + _getConfig().wms_instance, _layerName, _layerParams, _sourceParams, _callbackFunction);
+		_fetchConfig()
+			.then(() => {
+				//Tiled definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
+				if (_sourceParams == null) {
+					_sourceParams = {};
+				}
+				const _predefinedSourceParams = {
+					TILED: _getConfig().wms_tiled
+				}
+				_sourceParams = {
+					..._sourceParams,
+					..._predefinedSourceParams
+				};
+				_addWMSLayer("https://" + _getConfig().wms_host + "/" + _getConfig().wms_instance, _layerName, _layerParams, _sourceParams, _callbackFunction);
+			})
+			.catch(err => {
+				console.error("Konfiguration (geoline.config) konnte nicht geladen werden – addStmaWMSLayer wird übersprungen", err);
+			});
 	}
 
 	/**
@@ -1045,45 +1086,41 @@ let StmaOpenLayers = /** @class */ (function () {
 	 *	@since			v0.0
 	 */
 	StmaOpenLayers.prototype.addStmaBaseLayer = function(_mapname, _layerParams = {}, _sourceParams = {}, _callbackFunction = null) {
-		if (_getConfig().ags_services != null && _getConfig().ags_services[_mapname] != null) {
-			_addEsriLayer("https://" + _getConfig().ags_services[_mapname].ags_host + "/" + _getConfig().ags_services[_mapname].ags_instance + "/rest/services/" + _getConfig().ags_services[_mapname].ags_service + "/MapServer", _layerParams, _sourceParams, _callbackFunction);
-		} else
-		if (_getConfig().wmts_services != null && _getConfig().wmts_services[_mapname] != null) {
-
-			//GetCapabilities-URL
-			const _urlGetCapabilities = "https://" + _getConfig().wmts_services[_mapname].host + "/" + _getConfig().wmts_services[_mapname].instance + "/gwc/service/wmts?REQUEST=GetCapabilities"
-
-			//Matrix definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
-			if (_sourceParams == null) {
-				_sourceParams = {};
-			}
-			_sourceParams = {
-				..._sourceParams,
-				...{
-					matrixSet: _getConfig().wmts_services[_mapname].matrix
+		_fetchConfig()
+			.then(() => {
+				if (_getConfig().ags_services != null && _getConfig().ags_services[_mapname] != null) {
+					_addEsriLayer("https://" + _getConfig().ags_services[_mapname].ags_host + "/" + _getConfig().ags_services[_mapname].ags_instance + "/rest/services/" + _getConfig().ags_services[_mapname].ags_service + "/MapServer", _layerParams, _sourceParams, _callbackFunction);
+				} else if (_getConfig().wmts_services != null && _getConfig().wmts_services[_mapname] != null) {
+					//GetCapabilities-URL
+					const _urlGetCapabilities = "https://" + _getConfig().wmts_services[_mapname].host + "/" + _getConfig().wmts_services[_mapname].instance + "/gwc/service/wmts?REQUEST=GetCapabilities";
+					//Matrix definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
+					if (_sourceParams == null) {
+						_sourceParams = {};
+					}
+					_sourceParams = {
+						..._sourceParams,
+						...{ matrixSet: _getConfig().wmts_services[_mapname].matrix }
+					};
+					_addWMTSLayer(_urlGetCapabilities, _getConfig().wmts_services[_mapname].service, _layerParams, _sourceParams, _callbackFunction);
+				} else if (_getConfig().wms_services != null && _getConfig().wms_services[_mapname] != null) {
+					//URL
+					const _url = "https://" + _getConfig().wms_services[_mapname].host + "/" + _getConfig().wms_services[_mapname].instance;
+					//Tiled definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
+					if (_sourceParams == null) {
+						_sourceParams = {};
+					}
+					_sourceParams = {
+						..._sourceParams,
+						...{ TILED: _getConfig().wms_services[_mapname].tiled }
+					};
+					_addWMSLayer(_url, _getConfig().wms_services[_mapname].service, _layerParams, _sourceParams, _callbackFunction);
+				} else {
+					console.error("Karte '" + _mapname + "' nicht gefunden");
 				}
-			};
-			_addWMTSLayer(_urlGetCapabilities, _getConfig().wmts_services[_mapname].service, _layerParams, _sourceParams, _callbackFunction);
-		} else
-		if (_getConfig().wms_services != null && _getConfig().wms_services[_mapname] != null) {
-
-			//URL
-			const _url = "https://" + _getConfig().wms_services[_mapname].host + "/" + _getConfig().wms_services[_mapname].instance
-
-			//Tiled definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
-			if (_sourceParams == null) {
-				_sourceParams = {};
-			}
-			_sourceParams = {
-				..._sourceParams,
-				...{
-					TILED: _getConfig().wms_services[_mapname].tiled
-				}
-			};
-			_addWMSLayer(_url, _getConfig().wms_services[_mapname].service, _layerParams, _sourceParams, _callbackFunction);
-		} else {
-			console.error("Karte '" + _mapname + "' nicht gefunden");
-		}
+			})
+			.catch(err => {
+				console.error("Konfiguration (geoline.config) konnte nicht geladen werden – addStmaBaseLayer wird übersprungen", err);
+			});
 	}
 
 	/**
@@ -1374,42 +1411,44 @@ let StmaOpenLayers = /** @class */ (function () {
 
 		const vectorSource = new SourceVector({
 			loader: function(_extent, _resolution, _projection) {
-				const _url = "https://" + _getConfig().ags_host + "/" + _getConfig().ags_instance + "/rest/services/" + _mapservice + "/MapServer/" + _layerId + "/query/";
-
-				const _urlParams = {
-					"f": "json",
-					"returnGeometry": true,
-					"spatialRel": "esriSpatialRelIntersects",
-					"geometry":  encodeURIComponent('{"xmin":' + _extent[0] + ',"ymin":' + _extent[1] + ',"xmax":' + _extent[2] + ',"ymax":' + _extent[3] + ',"spatialReference":{"wkid":' + _epsgCode + '}}'),
-					"geometryType": "esriGeometryEnvelope",
-					"inSR": _epsgCode,
-					"outFields": "*",
-					"outSR": _epsgCode
-				};
-
-				// Create URL with parameters
-				const queryString = new URLSearchParams(_urlParams).toString();
-				const fullUrl = _url + '?' + queryString;
-
-				// Use the jsonp module that's already imported in the file
-				const jsonp = require('jsonp');
-				jsonp(fullUrl, null, (err, _response) => {
-					if (err) {
-						console.error("Error fetching JSONP data:", err);
-						return;
-					}
-
-					if (_response.error) {
-						alert(_response.error.message + '\n' + _response.error.details.join('\n'));
-					} else {
-						const features = _esrijsonFormat.readFeatures(_response, {
-							featureProjection: _projection
+				_fetchConfig()
+					.then(() => {
+						const _url = "https://" + _getConfig().ags_host + "/" + _getConfig().ags_instance + "/rest/services/" + _mapservice + "/MapServer/" + _layerId + "/query/";
+						const _urlParams = {
+							"f": "json",
+							"returnGeometry": true,
+							"spatialRel": "esriSpatialRelIntersects",
+							"geometry":  encodeURIComponent('{"xmin":' + _extent[0] + ',"ymin":' + _extent[1] + ',"xmax":' + _extent[2] + ',"ymax":' + _extent[3] + ',"spatialReference":{"wkid":' + _epsgCode + '}}'),
+							"geometryType": "esriGeometryEnvelope",
+							"inSR": _epsgCode,
+							"outFields": "*",
+							"outSR": _epsgCode
+						};
+						// Create URL with parameters
+						const queryString = new URLSearchParams(_urlParams).toString();
+						const fullUrl = _url + '?' + queryString;
+						// Use the jsonp module that's already imported in the file
+						const jsonp = require('jsonp');
+						jsonp(fullUrl, null, (err, _response) => {
+							if (err) {
+								console.error("Error fetching JSONP data:", err);
+								return;
+							}
+							if (_response.error) {
+								alert(_response.error.message + '\n' + _response.error.details.join('\n'));
+							} else {
+								const features = _esrijsonFormat.readFeatures(_response, {
+									featureProjection: _projection
+								});
+								if (features.length > 0) {
+									vectorSource.addFeatures(features);
+								}
+							}
 						});
-						if (features.length > 0) {
-							vectorSource.addFeatures(features);
-						}
-					}
-				});
+					})
+					.catch(err => {
+						console.error("Konfiguration (geoline.config) konnte nicht geladen werden – FeatureLoader übersprungen", err);
+					});
 			},
 			strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
 				tileSize: 512
