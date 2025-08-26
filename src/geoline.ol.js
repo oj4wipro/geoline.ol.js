@@ -38,30 +38,32 @@ import {register} from 'ol/proj/proj4';
  *	@method			StmaOpenLayers
  *	@description	Momentan ist OpenLayers 6.3.1 eingebunden.
  *
+ *	@param			{string} [_configUrl="https://gis5.stuttgart.de/geoline/geoline.config/config.aspx"]
+ *					Basis-URL für den Abruf der Geoline-Basiskonfiguration. Wird als vorbelegter Parameter verwendet.
+ *
  *	@returns		{null} -
  *
  *	@since			v0.0
  */
 let StmaOpenLayers = /** @class */ (function () {
 
-	function StmaOpenLayers() {
+	function StmaOpenLayers(_configUrl = "https://gis5.stuttgart.de/geoline/geoline.config/config.aspx") {
+		configUrl = _configUrl;
 		return this;
 	}
 
 	// ----------------------------------------------------------------------------------
 	// Intern
 	// ----------------------------------------------------------------------------------
-	let projection = null;
-	let map = null;
+    let configUrl = null;
+    let projection = null;
+    let map = null;
 	let viewParams = null;
-
 	let config = null;
-
 	let tileLoadFunction = null;
-
-	let overlayLayer = null;
-	let overlayLayers = []; //Layer, für die das Overlay aktiviert ist.
-	let overlayFunctions = []; //Funktionen der Layer, für die das Overlay aktiviert ist.
+    let overlayLayer = null;
+    let overlayLayers = []; //Layer, für die das Overlay aktiviert ist.
+    let overlayFunctions = []; //Funktionen der Layer, für die das Overlay aktiviert ist.
 
 	//	@description	holt die Konfiguration in Abhängigkeit des EPSG-Codes von unserem Internetserver ab.
 	//
@@ -80,7 +82,7 @@ let StmaOpenLayers = /** @class */ (function () {
 			epsg: projection,
 			url: typeof location !== 'undefined' ? location.href : ''
 		}).toString();
-		configPromise = fetch("https://gis5.stuttgart.de/geoline/geoline.config/config.aspx", {
+		configPromise = fetch(configUrl, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 			body: params
