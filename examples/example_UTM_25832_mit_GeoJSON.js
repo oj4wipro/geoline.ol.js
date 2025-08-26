@@ -12,8 +12,19 @@ import example_4326JSON from "./testdata/example_4326.json"
 const example_25832JSON_URL = "testdata/example_25832.json"
 
 const mymap = new StmaOpenLayers();
-mymap.initMap(25832, {}, {});
-
+mymap.initMap(
+    25832,
+    {},
+    {
+        zoom: 5,
+        center: [ 509286.82, 5404853 ],
+    },
+    {},
+    {},
+    function (map) {
+        console.log("initMap wurde ausgeführt");
+    }
+);
 mymap.addStmaBaseLayer("Grundkarte");
 
 //Aussehen definieren
