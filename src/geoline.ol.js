@@ -2,32 +2,32 @@
  @module StmaOpenLayers
  */
 
-import Feature from "ol/Feature";
-import Map from "ol/Map";
-import Overlay from "ol/Overlay";
-import TileGrid from "ol/tilegrid/TileGrid";
-import View from "ol/View";
-import ControlAttribution from "ol/control/Attribution";
-import FormatEsriJSON from "ol/format/EsriJSON";
-import FormatGeoJSON from "ol/format/GeoJSON";
-import FormatWMTSCapabilities from "ol/format/WMTSCapabilities";
-import GeomPoint from "ol/geom/Point";
-import LayerImage from "ol/layer/Image";
-import LayerTile from "ol/layer/Tile";
-import LayerVector from "ol/layer/Vector";
-import SourceImageArcGISRest from "ol/source/ImageArcGISRest";
-import SourceImageWMS from "ol/source/ImageWMS";
-import SourceTileWMS from 'ol/source/TileWMS';
-import SourceVector from "ol/source/Vector";
-import SourceXYZ from "ol/source/XYZ";
-import SourceWMTS, {optionsFromCapabilities as sourceWMTS_optionsFromCapabilities} from 'ol/source/WMTS';
-import StyleIcon from "ol/style/Icon";
-import StyleStyle from "ol/style/Style";
+import Feature from "ol/Feature.js";
+import Map from "ol/Map.js";
+import Overlay from "ol/Overlay.js";
+import TileGrid from "ol/tilegrid/TileGrid.js";
+import View from "ol/View.js";
+import ControlAttribution from "ol/control/Attribution.js";
+import FormatEsriJSON from "ol/format/EsriJSON.js";
+import FormatGeoJSON from "ol/format/GeoJSON.js";
+import FormatWMTSCapabilities from "ol/format/WMTSCapabilities.js";
+import GeomPoint from "ol/geom/Point.js";
+import LayerImage from "ol/layer/Image.js";
+import LayerTile from "ol/layer/Tile.js";
+import LayerVector from "ol/layer/Vector.js";
+import SourceImageArcGISRest from "ol/source/ImageArcGISRest.js";
+import SourceImageWMS from "ol/source/ImageWMS.js";
+import SourceTileWMS from 'ol/source/TileWMS.js';
+import SourceVector from "ol/source/Vector.js";
+import SourceXYZ from "ol/source/XYZ.js";
+import SourceWMTS, {optionsFromCapabilities as sourceWMTS_optionsFromCapabilities} from 'ol/source/WMTS.js';
+import StyleIcon from "ol/style/Icon.js";
+import StyleStyle from "ol/style/Style.js";
 import {defaults as defaultControls} from 'ol/control';
 
 import proj4 from "proj4";
-import {get as getProjection} from "ol/proj";
-import {register} from 'ol/proj/proj4';
+import {get as getProjection} from "ol/proj.js";
+import {register} from 'ol/proj/proj4.js';
 
 
 /**
@@ -683,11 +683,8 @@ let StmaOpenLayers = /** @class */ (function () {
 		//Karte initialisieren
 		let mapParams = {
 			target: "map",
-			controls: defaultControls({
-				attribution: true,
-				attributionOptions: {
-					tipLabel: "Copyright"
-				}
+   controls: defaultControls({
+				attribution: false
 			})
 		};
 
@@ -717,7 +714,8 @@ let StmaOpenLayers = /** @class */ (function () {
 			if (_attributionControlAvailable === false) {
 				//Attribution-Control hinzufügen
 				mapParams.controls.push(new ControlAttribution({
-					tipLabel: "Copyright"
+					tipLabel: "Copyright",
+					collapsible: true
 				}));
 			}
 		}

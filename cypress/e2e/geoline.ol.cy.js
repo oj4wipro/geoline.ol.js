@@ -144,7 +144,7 @@ describe('Lade alle Beispiele und prüfe sie', () => {
     it('Beispiel: example_WMS_25832.html', () => {
 
         cy.intercept('https://gis5.stuttgart.de/geoline/geoline.config/config.aspx').as('loadConfig');
-        cy.intercept('https://geoserver.stuttgart.de/geoserver/ows?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&FORMAT=image%2Fpng&TRANSPARENT=true&LAYERS=Base%3AA62_Luftbild_2009_EPSG25832**').as('loadMapTiles');
+        cy.intercept('https://geoserver.stuttgart.de/geoserver/ows?*SERVICE=WMS*LAYERS=Base%3AA62_Luftbild_2009_EPSG25832**').as('loadMapTiles');
 
         // Beispiel aufrufen
         cy.visit('/example_WMS_25832.html');
