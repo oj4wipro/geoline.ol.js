@@ -25,6 +25,7 @@
     "staticOutPath": "testdata"
   },
   "dependencies": {
+    "cypress": "^15.0.0",
     "jsonp": "^0.2.1",
     "ol": "^6.3.1",
     "proj4": "^2.7.0"
@@ -36,7 +37,8 @@
     "jsdoc": "^4.0.4",
     "parcel": "^2.15.2",
     "parcel-reporter-static-files-copy": "^1.5.3",
-    "replace": "^1.2.2"
+    "replace": "^1.2.2",
+    "wait-on": "^7.2.0"
   },
   "repository": {
     "type": "git",
@@ -51,6 +53,7 @@
     "build-examples": "parcel build examples/example*.html --no-content-hash --no-scope-hoist --no-cache --public-url '.' --target examples && cross-var replace '@version@' $npm_package_version dist/examples/example.html",
     "build-doc": "jsdoc -c jssdocconfig.json && cross-var replace '>Home</h1>' '>Version $npm_package_version</h1>' dist/doc/index.html",
     "build": "npm run build-js && npm run build-css && npm run build-examples && npm run build-doc",
-    "test": "vitest --run --reporter verbose"
+    "cy:open": "concurrently -k -s first \"parcel examples/example.html examples/testdata/**/*\" \"wait-on http://localhost:1234 && cypress open\"",
+    "cy:run": "concurrently -k -s first \"parcel examples/example.html examples/testdata/**/*\" \"wait-on http://localhost:1234 && cypress run --browser chrome\""
   }
 }
