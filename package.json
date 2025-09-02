@@ -7,10 +7,12 @@
   "files": [
     "./dist",
     "./src",
+    "./index.d.ts",
     "LICENSE",
     "README.md"
   ],
   "main": "dist/geoline.ol.js/geoline.ol.js",
+  "types": "./index.d.ts",
   "style": "dist/geoline.ol.js/geoline.ol.css",
   "targets": {
     "geoline.ol.js": {
