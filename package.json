@@ -11,21 +11,9 @@
     "LICENSE",
     "README.md"
   ],
-  "main": "dist/geoline.ol.js/geoline.ol.js",
+  "main": "dist/geoline.ol.js",
   "types": "./index.d.ts",
-  "style": "dist/geoline.ol.js/geoline.ol.css",
-  "targets": {
-    "geoline.ol.js": {
-      "distDir": "dist/geoline.ol.js"
-    },
-    "examples": {
-      "distDir": "dist/examples"
-    }
-  },
-  "staticFiles": {
-    "staticPath": "examples/testdata",
-    "staticOutPath": "testdata"
-  },
+  "style": "dist/geoline.ol.css",
   "dependencies": {
     "cypress": "^15.0.0",
     "jsonp": "^0.2.1",
@@ -39,9 +27,9 @@
     "cors-anywhere": "^0.4.4",
     "cross-var": "^1.1.0",
     "css-loader": "^7.1.2",
+    "css-minimizer-webpack-plugin": "^7.0.2",
     "http-server": "^14.1.1",
-    "parcel": "^2.15.2",
-    "parcel-reporter-static-files-copy": "^1.5.3",
+    "mini-css-extract-plugin": "^2.9.4",
     "replace": "^1.2.2",
     "style-loader": "^4.0.0",
     "ts-loader": "^9.5.1",
@@ -56,17 +44,13 @@
   },
   "license": "CC-BY-NC-SA-4.0",
   "scripts": {
-    "start-dev": "concurrently \"node cors-proxy.cjs\" \"parcel examples/example.html examples/testdata/**/*\"",
     "audit": "npm audit --only=prod",
-    "build-js": "parcel build src/geoline.ol.js --target geoline.ol.js --no-scope-hoist --no-cache && cross-var replace '@version@' $npm_package_version dist/geoline.ol.js/geoline.ol.js && cross-var replace '@version@' $npm_package_version dist/geoline.ol.js/geoline.ol.js",
-    "build-css": "parcel build src/geoline.ol.css --target geoline.ol.js --no-scope-hoist --no-cache",
-    "build-examples": "parcel build examples/example*.html --no-content-hash --no-scope-hoist --no-cache --public-url '.' --target examples && cross-var replace '@version@' $npm_package_version dist/examples/example.html",
     "build-types": "tsc",
-    "build": "npm run build-js && npm run build-css && npm run build-examples",
-    "cy:open": "concurrently -k -s first \"parcel examples/example.html examples/testdata/**/*\" \"wait-on http://localhost:1234 && cypress open\"",
-    "cy:run": "concurrently -k -s first \"parcel examples/example.html examples/testdata/**/*\" \"wait-on http://localhost:1234 && cypress run --browser chrome\"",
-    "build-demo": "webpack --config webpack.demo.config.cjs",
-    "serve-demo": "http-server demo -o",
-    "demo": "npm run build-demo && npm run serve-demo"
+    "build-dist": "webpack --config webpack.dist.config.cjs --mode production",
+    "build-examples": "webpack --config webpack.examples.config.cjs",
+    "serve-examples": "http-server demo -o -p 8080",
+    "examples": "npm run build-examples && npm run serve-examples",
+    "cypress-open": "concurrently -k -s first \"npm run examples\" \"wait-on http://localhost:8080 && cypress open\"",
+    "cypress-run": "concurrently -k -s first \"npm run examples\" \"wait-on http://localhost:8080 && cypress run --browser chrome\""
   }
 }
