@@ -1,11 +1,10 @@
-//import StmaOpenLayers from "@stadtmessungsamt-stuttgart/geoline.ol.js";
-import StmaOpenLayers from "../src/geoline.ol";
-import "../src/geoline.ol.css";
+import StmaOpenLayers from "@stadtmessungsamt-stuttgart/geoline.ol.js/src/geoline.ol.js";
+import "@stadtmessungsamt-stuttgart/geoline.ol.js/src/geoline.ol.css";
 
-import styleIcon from "ol/style/Icon";
-import styleFill from "ol/style/Fill";
-import styleStroke from "ol/style/Stroke";
-import styleStyle from "ol/style/Style";
+import styleIcon from "ol/style/Icon.js";
+import styleFill from "ol/style/Fill.js";
+import styleStroke from "ol/style/Stroke.js";
+import styleStyle from "ol/style/Style.js";
 
 import example_4326JSON from "./testdata/example_4326.json"
 
