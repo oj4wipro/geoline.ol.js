@@ -23,11 +23,12 @@ import SourceXYZ from "ol/source/XYZ.js";
 import SourceWMTS, {optionsFromCapabilities as sourceWMTS_optionsFromCapabilities} from 'ol/source/WMTS.js';
 import StyleIcon from "ol/style/Icon.js";
 import StyleStyle from "ol/style/Style.js";
-import {defaults as defaultControls} from 'ol/control';
+import {defaults as defaultControls} from 'ol/control.js';
 
 import proj4 from "proj4";
 import {get as getProjection} from "ol/proj.js";
 import {register} from 'ol/proj/proj4.js';
+import jsonp from "jsonp";
 
 
 /**
@@ -143,7 +144,6 @@ let StmaOpenLayers = /** @class */ (function () {
 	//
 	//	@since			v0.0
 	const _addEsriLayer = function(_url, _layerParams, _sourceParams, _callbackFunction) {
-		const jsonp = require('jsonp');
 		jsonp(_url + "?f=json", null, (err, ags_info) => {
 			if (err) {
 				console.error("Fehler beim Abrufen der Informationen des AGS-Diensts", err);
