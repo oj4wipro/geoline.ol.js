@@ -15,7 +15,6 @@
   "types": "./index.d.ts",
   "style": "dist/geoline.ol.css",
   "dependencies": {
-    "cypress": "^15.0.0",
     "jsonp": "^0.2.1",
     "ol": "^10.6.1",
     "proj4": "^2.7.0"
@@ -28,6 +27,7 @@
     "cross-var": "^1.1.0",
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^7.0.2",
+    "cypress": "^15.2.0",
     "http-server": "^14.1.1",
     "mini-css-extract-plugin": "^2.9.4",
     "replace": "^1.2.2",
