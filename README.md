@@ -1,5 +1,5 @@
 # geoline.ol.js
-Dokumentation und Beispiele für geoline.ol.js - Eine API auf Basis von OpenLayers zur einfachen
+Eine API auf Basis von OpenLayers zur einfachen
 Einbindung der Kartendienste der Stadtmessungsamtes Stuttgart.
 
 ## URLs
@@ -9,7 +9,6 @@ Einbindung der Kartendienste der Stadtmessungsamtes Stuttgart.
 
 ## Was ist inbegriffen?
 
-* [Dokumentation](https://gis5.stuttgart.de/geoline/geoline.ol.js/doc/index.html)
 * [Beispiele](https://gis5.stuttgart.de/geoline/geoline.ol.js/examples/example.html)
 
 ## Installation

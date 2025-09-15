@@ -1,33 +1,16 @@
 # Abhängigkeitsverzeichnisse
 node_modules/
+demo/
 
 # Parcel Cache
 .cache
 .parcel-cache
 
 # IDE-spezifische Dateien
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+.vscode
 .vscode-test
 .idea
 /start-dev.sh
-
-# Logs
-logs
-*.log
-npm-debug.log*
-
-# npm Cache und Pakete
-.npm
-*.tgz
-
-# Coverage Verzeichnisse
-coverage
-*.lcov
-.nyc_output
 
 # Temporäre Dateien
 .DS_Store
