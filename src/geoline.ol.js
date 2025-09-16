@@ -1500,8 +1500,11 @@ let StmaOpenLayers = /** @class */ (function () {
 	return StmaOpenLayers;
 }());
 
+// Default Export für moderne ES6 Imports
+export default StmaOpenLayers;
+
 // Unterstützung für alte Schreibweise
 const stma_openlayers = StmaOpenLayers;
 
-// Beide Varianten exportieren
-export { StmaOpenLayers as default, stma_openlayers };
+// Named Exports für Kompatibilität
+export { StmaOpenLayers, stma_openlayers };

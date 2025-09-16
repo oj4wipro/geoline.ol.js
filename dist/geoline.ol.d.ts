@@ -1,9 +1,9 @@
+export default StmaOpenLayers;
 /**
  *	version			2.1.0
  */
 /**
  *	@method			StmaOpenLayers
- *	@description	Momentan ist OpenLayers 6.3.1 eingebunden.
  *
  *	@param			{string} [_configUrl="https://gis5.stuttgart.de/geoline/geoline.config/config.aspx"]
  *					Basis-URL für den Abruf der Geoline-Basiskonfiguration. Wird als vorbelegter Parameter verwendet.
@@ -12,7 +12,7 @@
  *
  *	@since			v0.0
  */
-declare let StmaOpenLayers: {
+export let StmaOpenLayers: {
     new (_configUrl?: string): {
         initMap(_epsgCode: int, _mapParams?: object, _viewParams?: object, _customParams?: object, _callbackFunction?: Function): null;
         addEsriLayer(_url: string, _layerParams?: object, _sourceParams?: object, _callbackFunction?: Function): null;
@@ -50,4 +50,3 @@ export const stma_openlayers: {
         getConfig(): object;
     };
 };
-export { StmaOpenLayers as default };
