@@ -5,9 +5,8 @@
   "author": "Stadtmessungsamt, LHS Stuttgart",
   "type": "module",
   "files": [
-    "./dist",
-    "./src",
-    "./index.d.ts",
+    "dist",
+    "src",
     "LICENSE",
     "README.md"
   ],
@@ -45,7 +44,6 @@
   "license": "CC-BY-NC-SA-4.0",
   "scripts": {
     "audit": "npm audit --only=prod",
-    "build-types": "tsc",
     "build-dist": "webpack --config webpack.dist.config.cjs --mode production",
     "build-examples": "webpack --config webpack.examples.config.cjs",
     "serve-examples": "http-server demo -o -p 8080",
