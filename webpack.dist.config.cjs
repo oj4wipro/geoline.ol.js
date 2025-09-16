@@ -1,11 +1,14 @@
 const path = require('path');
-const fs = require('fs');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const { execSync } = require('child_process');
 
 module.exports = {
     mode: 'production',
+    performance: {
+        maxEntrypointSize: 512000, // 500 KiB statt 244 KiB
+        maxAssetSize: 512000,      // 500 KiB statt 244 KiB
+    },
     entry: {
         'geoline.ol': [
             path.resolve(__dirname, 'src/geoline.ol.js'),
@@ -46,15 +49,15 @@ module.exports = {
         // Nach Build die Version im erzeugten JS ersetzen
         {
             apply: (compiler) => {
-                compiler.hooks.done.tap('ReplaceVersionInDistJs', () => {
-                    const outFile = path.resolve(__dirname, 'dist/geoline.ol.js');
-                    if (fs.existsSync(outFile)) {
-                        try {
-                            execSync("npx cross-var replace '@version@' '$npm_package_version' 'dist/geoline.ol.js'", { stdio: 'inherit', shell: true });
-                        } catch (e) {
-                            console.error('Fehler beim Ersetzen der Version in dist JS:', e?.message || e);
-                        }
-                    }
+                compiler.hooks.done.tap('PostBuildTasks', () => {
+                    // 1) Version in dist JS ersetzen
+                    execSync("npx cross-var replace '@version@' '$npm_package_version' 'dist/geoline.ol.js'", { stdio: 'inherit', shell: true });
+
+                    // 2) TypeScript-Declaration Files generieren
+                    execSync('npx tsc -p tsconfig.json', { stdio: 'inherit', shell: true });
+
+                    // 3) Version auch in d.ts aktualisieren (falls Datei existiert)
+                    execSync("npx cross-var replace '@version@' '$npm_package_version' 'dist/geoline.ol.d.ts'", { stdio: 'inherit', shell: true });
                 });
             }
         },

@@ -1,5 +1,5 @@
 /**
- @module StmaOpenLayers
+ * @module StmaOpenLayers
  */
 
 import Feature from "ol/Feature.js";
@@ -37,7 +37,6 @@ import jsonp from "jsonp";
 
 /**
  *	@method			StmaOpenLayers
- *	@description	Momentan ist OpenLayers 6.3.1 eingebunden.
  *
  *	@param			{string} [_configUrl="https://gis5.stuttgart.de/geoline/geoline.config/config.aspx"]
  *					Basis-URL für den Abruf der Geoline-Basiskonfiguration. Wird als vorbelegter Parameter verwendet.
@@ -48,9 +47,11 @@ import jsonp from "jsonp";
  */
 let StmaOpenLayers = /** @class */ (function () {
 
-	function StmaOpenLayers(_configUrl = "https://gis5.stuttgart.de/geoline/geoline.config/config.aspx") {
-		configUrl = _configUrl;
-		return this;
+	class StmaOpenLayers {
+		constructor(_configUrl = "https://gis5.stuttgart.de/geoline/geoline.config/config.aspx") {
+			configUrl = _configUrl;
+			return this;
+		}
 	}
 
 	// ----------------------------------------------------------------------------------

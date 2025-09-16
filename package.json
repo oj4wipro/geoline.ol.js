@@ -12,7 +12,7 @@
     "README.md"
   ],
   "main": "dist/geoline.ol.js",
-  "types": "./index.d.ts",
+  "types": "dist/geoline.ol.d.ts",
   "style": "dist/geoline.ol.css",
   "dependencies": {
     "jsonp": "^0.2.1",

@@ -85,5 +85,9 @@ module.exports = {
       ],
     }),
   ],
+  performance: {
+    maxEntrypointSize: 1048576,
+    maxAssetSize: 1048576,
+  },
   devtool: 'source-map',
 };
