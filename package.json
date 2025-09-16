@@ -50,7 +50,7 @@
     "build-examples": "webpack --config webpack.examples.config.cjs",
     "serve-examples": "http-server demo -o -p 8080",
     "examples": "npm run build-examples && npm run serve-examples",
-    "cypress-open": "concurrently -k -s first \"npm run examples\" \"wait-on http://localhost:8080 && cypress open\"",
-    "cypress-run": "concurrently -k -s first \"npm run examples\" \"wait-on http://localhost:8080 && cypress run --browser chrome\""
+    "cypress-open": "concurrently -k -s first \"npm run build-examples && http-server demo -p 8080\" \"wait-on http://localhost:8080 && cypress open\"",
+    "cypress-run": "concurrently -k -s first \"npm run build-examples && http-server demo -p 8080\" \"wait-on http://localhost:8080 && cypress run --browser chrome\""
   }
 }
