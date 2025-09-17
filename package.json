@@ -14,6 +14,7 @@
   "types": "dist/geoline.ol.d.ts",
   "style": "dist/geoline.ol.css",
   "dependencies": {
+    "core-js": "^3.45.1",
     "jsonp": "^0.2.1",
     "ol": "^10.6.1",
     "proj4": "^2.7.0"
@@ -45,7 +46,7 @@
   "scripts": {
     "audit": "npm audit --only=prod",
     "build-dist": "webpack --config webpack.dist.config.cjs --mode production",
-    "build-examples": "webpack --config webpack.examples.config.cjs",
+    "build-examples": "npm run build-dist && webpack --config webpack.examples.config.cjs",
     "serve-examples": "http-server demo -o -p 8080",
     "examples": "npm run build-examples && npm run serve-examples",
     "cypress-open": "concurrently -k -s first \"npm run build-examples && http-server demo -p 8080\" \"wait-on http://localhost:8080 && cypress open\"",

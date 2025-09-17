@@ -10,15 +10,16 @@ module.exports = {
         maxAssetSize: 512000,      // 500 KiB statt 244 KiB
     },
     entry: {
-        'geoline.ol': [
-            path.resolve(__dirname, 'src/geoline.ol.js'),
-            path.resolve(__dirname, 'src/geoline.ol.css')
-        ],
+        'geoline.ol': path.resolve(__dirname, 'src/geoline.ol.js'),
     },
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: '[name].js',
         clean: {},
+        module: true,
+        library: {
+            type: 'module'
+        }
     },
     resolve: {
         extensions: ['.js', '.css'],
@@ -81,4 +82,7 @@ module.exports = {
         ],
     },
     devtool: 'source-map',
+    experiments: {
+        outputModule: true,
+    },
 };

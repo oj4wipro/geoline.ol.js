@@ -1,4 +1,4 @@
-import StmaOpenLayers from "@stadtmessungsamt-stuttgart/geoline.ol.js/src/geoline.ol.js";
+import StmaOpenLayers from "@stadtmessungsamt-stuttgart/geoline.ol.js/dist/geoline.ol.js";
 import "@stadtmessungsamt-stuttgart/geoline.ol.js/src/geoline.ol.css";
 
 const mymap = new StmaOpenLayers();
