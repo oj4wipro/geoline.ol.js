@@ -1,0 +1,17 @@
+# Abhängigkeitsverzeichnisse
+node_modules/
+demo/
+
+# Parcel Cache
+.cache
+.parcel-cache
+
+# IDE-spezifische Dateien
+.vscode
+.vscode-test
+.idea
+/start-dev.sh
+
+# Temporäre Dateien
+.DS_Store
+Thumbs.db
