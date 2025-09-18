@@ -23,6 +23,18 @@ module.exports = {
     filename: '[name].js',
     clean: true,
   },
+  devServer: {
+    static: {
+      directory: path.resolve(__dirname, 'demo'),
+      watch: true,
+    },
+    client: {
+      overlay: true,
+    },
+    port: 8080,
+    open: true,
+    hot: false,
+  },
   resolve: {
     extensions: ['.js', '.ts'],
     alias: {

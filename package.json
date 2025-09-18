@@ -28,7 +28,6 @@
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^7.0.2",
     "cypress": "^15.2.0",
-    "http-server": "^14.1.1",
     "mini-css-extract-plugin": "^2.9.4",
     "replace": "^1.2.2",
     "style-loader": "^4.0.0",
@@ -36,7 +35,8 @@
     "typescript": "^5.9.2",
     "wait-on": "^8.0.4",
     "webpack": "^5.94.0",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.4"
   },
   "repository": {
     "type": "git",
@@ -47,9 +47,9 @@
     "audit": "npm audit --only=prod",
     "build-dist": "webpack --config webpack.dist.config.cjs --mode production",
     "build-examples": "npm run build-dist && webpack --config webpack.examples.config.cjs",
-    "serve-examples": "http-server demo -o -p 8080",
-    "examples": "npm run build-examples && npm run serve-examples",
-    "cypress-open": "concurrently -k -s first \"npm run build-examples && http-server demo -p 8080\" \"wait-on http://localhost:8080 && cypress open\"",
-    "cypress-run": "concurrently -k -s first \"npm run build-examples && http-server demo -p 8080\" \"wait-on http://localhost:8080 && cypress run --browser chrome\""
+    "serve-examples": "webpack serve --config webpack.examples.config.cjs --port 8080 --open",
+    "examples": "npm run serve-examples",
+    "cypress-open": "concurrently -k -s first \"webpack serve --config webpack.examples.config.cjs --port 8080\" \"wait-on http://localhost:8080 && cypress open\"",
+    "cypress-run": "concurrently -k -s first \"webpack serve --config webpack.examples.config.cjs --port 8080\" \"wait-on http://localhost:8080 && cypress run --browser chrome\""
   }
 }
