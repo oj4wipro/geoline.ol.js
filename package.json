@@ -28,6 +28,7 @@
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^7.0.2",
     "cypress": "^15.2.0",
+    "gh-pages": "^6.3.0",
     "mini-css-extract-plugin": "^2.9.4",
     "replace": "^1.2.2",
     "style-loader": "^4.0.0",
@@ -46,10 +47,12 @@
   "scripts": {
     "audit": "npm audit --only=prod",
     "build-dist": "webpack --config webpack.dist.config.cjs --mode production",
+    "build-dev": "webpack --config webpack.dist.config.cjs --watch",
     "build-examples": "npm run build-dist && webpack --config webpack.examples.config.cjs",
-    "serve-examples": "webpack serve --config webpack.examples.config.cjs --port 8080 --open",
-    "examples": "npm run serve-examples",
+    "serve-examples": "wait-on demo && webpack serve --config webpack.examples.config.cjs --port 8080 --open",
+    "deploy-gh-pages": "npm run build-examples && gh-pages --dist demo",
     "cypress-open": "concurrently -k -s first \"webpack serve --config webpack.examples.config.cjs --port 8080\" \"wait-on http://localhost:8080 && cypress open\"",
-    "cypress-run": "concurrently -k -s first \"webpack serve --config webpack.examples.config.cjs --port 8080\" \"wait-on http://localhost:8080 && cypress run --browser chrome\""
+    "cypress-run": "concurrently -k -s first \"webpack serve --config webpack.examples.config.cjs --port 8080\" \"wait-on http://localhost:8080 && cypress run --browser chrome\"",
+    "start-dev": "concurrently \"npm run build-dev\" \"webpack --config webpack.examples.config.cjs --watch\" \"npm run serve-examples\""
   }
 }

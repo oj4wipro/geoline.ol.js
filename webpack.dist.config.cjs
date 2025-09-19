@@ -1,7 +1,7 @@
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
-const { execSync } = require('child_process');
+const {execSync} = require('child_process');
 
 module.exports = {
     mode: 'production',
@@ -52,13 +52,19 @@ module.exports = {
             apply: (compiler) => {
                 compiler.hooks.done.tap('PostBuildTasks', () => {
                     // 1) Version in dist JS ersetzen
-                    execSync("npx cross-var replace '@version@' '$npm_package_version' 'dist/geoline.ol.js'", { stdio: 'inherit', shell: true });
+                    execSync("npx cross-var replace '@version@' '$npm_package_version' 'dist/geoline.ol.js'", {
+                        stdio: 'inherit',
+                        shell: true
+                    });
 
                     // 2) TypeScript-Declaration Files generieren
-                    execSync('npx tsc -p tsconfig.json', { stdio: 'inherit', shell: true });
+                    execSync('npx tsc -p tsconfig.json', {stdio: 'inherit', shell: true});
 
                     // 3) Version auch in d.ts aktualisieren (falls Datei existiert)
-                    execSync("npx cross-var replace '@version@' '$npm_package_version' 'dist/geoline.ol.d.ts'", { stdio: 'inherit', shell: true });
+                    execSync("npx cross-var replace '@version@' '$npm_package_version' 'dist/geoline.ol.d.ts'", {
+                        stdio: 'inherit',
+                        shell: true
+                    });
                 });
             }
         },
@@ -71,7 +77,7 @@ module.exports = {
                     preset: [
                         'default',
                         {
-                            discardComments: { removeAll: true }, // Alle Kommentare entfernen
+                            discardComments: {removeAll: true}, // Alle Kommentare entfernen
                             normalizeWhitespace: true,            // Whitespace normalisieren
                             mergeLonghand: true,                  // Longhand-Properties zusammenführen
                             mergeRules: true,                     // Ähnliche Regeln zusammenführen
