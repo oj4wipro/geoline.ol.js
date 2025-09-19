@@ -211,6 +211,66 @@ class StmaOpenLayers {
     }
 
     /**
+     * JSONP with simple Promise cache to avoid duplicate network requests per URL
+     * @param {string} url
+     * @returns {Promise<any>}
+     */
+    _jsonpCached(url) {
+        const cached = this.map.get(url);
+        if (cached) return cached;
+        const p = new Promise((resolve, reject) => {
+            jsonp(url, null, (err, data) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                resolve(data);
+            });
+        });
+        this.map.set(url, p);
+        return p;
+    }
+
+    /**
+     * Fetch text with simple Promise cache by URL (POST by default)
+     * @param {string} url
+     * @param {RequestInit} [options]
+     * @returns {Promise<string>}
+     */
+    _fetchTextCached(url, options = {method: 'POST'}) {
+        const cached = this.map.get(url);
+        if (cached) return cached;
+        const p = fetch(url, options).then(r => {
+            if (!r.ok) throw new Error('Network response was not ok: ' + r.status);
+            return r.text();
+        }).catch(err => {
+            // On failure, drop cache to allow retry later
+            this.map.delete(url);
+            throw err;
+        });
+        this.map.set(url, p);
+        return p;
+    }
+
+    /**
+     * Get a cached GeoJSON format instance for a specific dataProjection.
+     * The instance is created with featureProjection set to the current map projection.
+     * @param {string} dataProjection
+     */
+    _getGeoJSONFormat(dataProjection) {
+        const key = dataProjection + '->' + this.projection;
+        let fmt = this.map.get(key);
+        if (!fmt) {
+            fmt = new FormatGeoJSON({
+                dataProjection: dataProjection,
+                featureProjection: this.projection
+            });
+            this.map.set(key, fmt);
+        }
+        return fmt;
+    }
+
+    /**
      * @description fügt einen EsriLayer hinzu. (gecacht + dynamisch)
      *
      * @param       {string} _url URL zum AGS-Dienst
@@ -224,62 +284,61 @@ class StmaOpenLayers {
      * @since       v0.0
      */
     _addEsriLayer(_url, _layerParams, _sourceParams, _callbackFunction) {
-        jsonp(_url + "?f=json", null, (err, /** @type {AGSInfo} */ ags_info) => {
-            if (err) {
+        this._jsonpCached(_url + "?f=json")
+            .then((/** @type {AGSInfo} */ ags_info) => {
+                try {
+                    if (ags_info.error !== undefined) {
+                        console.warn("Eigenschaften des Kartendienstes " + _url + " konnten nicht abgerufen werden.", ags_info.error);
+                        return;
+                    }
+
+                    //Copyright
+                    const url = new URL(_url);
+                    if (((this._getConfig().ags_hosts) || []).includes(url.hostname)) {
+                        if (ags_info.copyrightText == null || ags_info.copyrightText.length === 0) {
+                            ags_info.copyrightText = "© Stadtmessungsamt, LHS Stuttgart"
+                        }
+                    }
+
+                    //AGS Kartendienst von Esri?
+                    if (url.hostname.indexOf("arcgisonline.com") > -1 || url.hostname.indexOf("arcgis.com") > -1) {
+                        //Der Copyright-Vermerk muss immer sichtbar sein
+                        const _attributionControl = this.map.getControls().getArray().filter(function (_control) {
+                            return (_control instanceof ControlAttribution);
+                        })[0];
+                        _attributionControl.setCollapsible(false);
+                        _attributionControl.setCollapsed(false);
+                    }
+
+                    //spatialReference korrigieren für 10.0
+                    if (ags_info.currentVersion === 10.05 && ags_info.spatialReference.latestWkid == null) {
+                        switch (ags_info.spatialReference.wkid) {
+                            case 102100:
+                                ags_info.spatialReference.latestWkid = 3857;
+                                break;
+                        }
+                    }
+
+                    //spatialReference überprüfen
+                    if (this.projection !== "EPSG:" + ags_info.spatialReference.wkid && this.projection !== "EPSG:" + ags_info.spatialReference.latestWkid) {
+                        console.warn("Projektion der Karte und des Kartendienstes stimmen nicht überein. Karte: " + this.projection + ", Kartendienst: EPSG:", ags_info.spatialReference.wkid + " / EPSG:" + ags_info.spatialReference.latestWkid, _url);
+                    }
+
+                    //Ist es ein gecachter Dienst?
+                    if (ags_info.singleFusedMapCache === true) {
+                        //-> gecachter Dienst hinzufügen
+                        this._initCachedLayer(_url, _layerParams, _sourceParams, ags_info, _callbackFunction);
+                    } else {
+                        //-> dynamischer Dienst hinzufügen
+                        this._initDynamicLayer(_url, _layerParams, _sourceParams, ags_info, _callbackFunction);
+                    }
+                } catch (e) {
+                    console.error("Fehler beim Initalisieren des Layers " + _url, e);
+                }
+            })
+            .catch(err => {
                 console.error("Fehler beim Abrufen der Informationen des AGS-Diensts", err);
-                return;
-            }
-
-            try {
-                if (ags_info.error !== undefined) {
-                    console.warn("Eigenschaften des Kartendienstes " + _url + " konnten nicht abgerufen werden.", ags_info.error);
-                    return;
-                }
-
-                //Copyright
-                const url = new URL(_url);
-                if (((this._getConfig().ags_hosts) || []).includes(url.hostname)) {
-                    if (ags_info.copyrightText == null || ags_info.copyrightText.length === 0) {
-                        ags_info.copyrightText = "© Stadtmessungsamt, LHS Stuttgart"
-                    }
-                }
-
-                //AGS Kartendienst von Esri?
-                if (url.hostname.indexOf("arcgisonline.com") > -1 || url.hostname.indexOf("arcgis.com") > -1) {
-                    //Der Copyright-Vermerk muss immer sichtbar sein
-                    const _attributionControl = this.map.getControls().getArray().filter(function (_control) {
-                        return (_control instanceof ControlAttribution);
-                    })[0];
-                    _attributionControl.setCollapsible(false);
-                    _attributionControl.setCollapsed(false);
-                }
-
-                //spatialReference korrigieren für 10.0
-                if (ags_info.currentVersion === 10.05 && ags_info.spatialReference.latestWkid == null) {
-                    switch (ags_info.spatialReference.wkid) {
-                        case 102100:
-                            ags_info.spatialReference.latestWkid = 3857;
-                            break;
-                    }
-                }
-
-                //spatialReference überprüfen
-                if (this.projection !== "EPSG:" + ags_info.spatialReference.wkid && this.projection !== "EPSG:" + ags_info.spatialReference.latestWkid) {
-                    console.warn("Projektion der Karte und des Kartendienstes stimmen nicht überein. Karte: " + this.projection + ", Kartendienst: EPSG:", ags_info.spatialReference.wkid + " / EPSG:" + ags_info.spatialReference.latestWkid, _url);
-                }
-
-                //Ist es ein gecachter Dienst?
-                if (ags_info.singleFusedMapCache === true) {
-                    //-> gecachter Dienst hinzufügen
-                    this._initCachedLayer(_url, _layerParams, _sourceParams, ags_info, _callbackFunction);
-                } else {
-                    //-> dynamischer Dienst hinzufügen
-                    this._initDynamicLayer(_url, _layerParams, _sourceParams, ags_info, _callbackFunction);
-                }
-            } catch (e) {
-                console.error("Fehler beim Initalisieren des Layers " + _url, e);
-            }
-        });
+            });
 
     }
 
@@ -303,15 +362,7 @@ class StmaOpenLayers {
         //GetCapabilities abrufen
         const url = new URL(_url);
 
-        fetch(_url, {
-            method: 'POST'
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok: ' + response.status);
-                }
-                return response.text();
-            })
+        this._fetchTextCached(_url, {method: 'POST'})
             .then(wmtscapabilities => {
                 const _formatWMTSCapabilities = new FormatWMTSCapabilities();
 
@@ -402,11 +453,6 @@ class StmaOpenLayers {
      * @since           v2.1
      */
     _addWMSLayer(_url, _layerName, _layerParams, _sourceParams, _callbackFunction) {
-        //sourceParams
-        let sourceParams = {
-            url: _url,
-            params: {"LAYERS": _layerName}
-        };
 
         //diese Parameter können nicht überdefiniert werden.
         const predefinedSourceParams = {
@@ -419,11 +465,16 @@ class StmaOpenLayers {
             predefinedSourceParams.attributions = "© Stadtmessungsamt, LHS Stuttgart";
         }
 
-        sourceParams = {
-            ...sourceParams,
+        let sourceParams = {
+            ...{
+                url: _url,
+                params: {"LAYERS": _layerName}
+            },
             ..._sourceParams,
             ...predefinedSourceParams
         };
+        // Beim Zusammenführen von WMS-Diensten kann es vorkommen, dass der Layername nicht immer im Parameter "LAYERS" enthalten ist.
+        sourceParams.params.LAYERS = _layerName;
 
         //Der Layer kann gekachelt oder als ganzes Bild abgerufen werden.
         let layer;
@@ -1120,32 +1171,33 @@ class StmaOpenLayers {
     addStmaBaseLayer(_mapname, _layerParams = {}, _sourceParams = {}, _callbackFunction = null) {
         this._fetchConfig()
             .then(() => {
-                if (this._getConfig().ags_services != null && this._getConfig().ags_services[_mapname] != null) {
-                    this._addEsriLayer("https://" + this._getConfig().ags_services[_mapname].ags_host + "/" + this._getConfig().ags_services[_mapname].ags_instance + "/rest/services/" + this._getConfig().ags_services[_mapname].ags_service + "/MapServer", _layerParams, _sourceParams, _callbackFunction);
-                } else if (this._getConfig().wmts_services != null && this._getConfig().wmts_services[_mapname] != null) {
+                const config = this._getConfig();
+                if (config.ags_services != null && config.ags_services[_mapname] != null) {
+                    this._addEsriLayer("https://" + config.ags_services[_mapname].ags_host + "/" + config.ags_services[_mapname].ags_instance + "/rest/services/" + config.ags_services[_mapname].ags_service + "/MapServer", _layerParams, _sourceParams, _callbackFunction);
+                } else if (config.wmts_services != null && config.wmts_services[_mapname] != null) {
                     //GetCapabilities-URL
-                    const _urlGetCapabilities = "https://" + this._getConfig().wmts_services[_mapname].host + "/" + this._getConfig().wmts_services[_mapname].instance + "/gwc/service/wmts?REQUEST=GetCapabilities";
+                    const _urlGetCapabilities = "https://" + config.wmts_services[_mapname].host + "/" + config.wmts_services[_mapname].instance + "/gwc/service/wmts?REQUEST=GetCapabilities";
                     //Matrix definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
                     if (_sourceParams == null) {
                         _sourceParams = {};
                     }
                     _sourceParams = {
                         ..._sourceParams,
-                        ...{matrixSet: this._getConfig().wmts_services[_mapname].matrix}
+                        ...{matrixSet: config.wmts_services[_mapname].matrix}
                     };
-                    this._addWMTSLayer_impl(_urlGetCapabilities, this._getConfig().wmts_services[_mapname].service, _layerParams, _sourceParams, _callbackFunction);
-                } else if (this._getConfig().wms_services != null && this._getConfig().wms_services[_mapname] != null) {
+                    this._addWMTSLayer_impl(_urlGetCapabilities, config.wmts_services[_mapname].service, _layerParams, _sourceParams, _callbackFunction);
+                } else if (config.wms_services != null && config.wms_services[_mapname] != null) {
                     //URL
-                    const _url = "https://" + this._getConfig().wms_services[_mapname].host + "/" + this._getConfig().wms_services[_mapname].instance;
+                    const _url = "https://" + config.wms_services[_mapname].host + "/" + config.wms_services[_mapname].instance;
                     //Tiled definieren - das was hier angegeben wird, kann nicht vom Nutzer überdefiniert werden.
                     if (_sourceParams == null) {
                         _sourceParams = {};
                     }
                     _sourceParams = {
                         ..._sourceParams,
-                        ...{TILED: this._getConfig().wms_services[_mapname].tiled}
+                        ...{TILED: config.wms_services[_mapname].tiled}
                     };
-                    this._addWMSLayer(_url, this._getConfig().wms_services[_mapname].service, _layerParams, _sourceParams, _callbackFunction);
+                    this._addWMSLayer(_url, config.wms_services[_mapname].service, _layerParams, _sourceParams, _callbackFunction);
                 } else {
                     console.error("Karte '" + _mapname + "' nicht gefunden");
                 }
@@ -1286,11 +1338,7 @@ class StmaOpenLayers {
             console.error("Projektion " + _projectionGeoJSON + " nicht gefunden. Es kann zu falscher Darstellung der Karte kommen");
         }
 
-        const _geojsonFormat = new FormatGeoJSON({
-            dataProjection: _projectionGeoJSON,
-            featureProjection: this.projection
-        })
-
+        const _geojsonFormat = this._getGeoJSONFormat(_projectionGeoJSON);
         const _vectorSource = new SourceVector({
             features: _geojsonFormat.readFeatures(_geojson)
         });
@@ -1429,8 +1477,6 @@ class StmaOpenLayers {
     addStmaEsriFeatureLayer(_mapservice, _layerId, _styleFunction = null, _callbackFunction = null) {
         const _epsgCode = this.projection.replace("EPSG:", "");
 
-        const _esrijsonFormat = new FormatEsriJSON();
-
         const vectorSource = new SourceVector({
             loader: function (_extent, _resolution, _projection) {
                 let self = this;
@@ -1460,6 +1506,7 @@ class StmaOpenLayers {
                             if (_response.error) {
                                 alert(_response.error.message + '\n' + _response.error.details.join('\n'));
                             } else {
+                                const _esrijsonFormat = new FormatEsriJSON()
                                 const features = _esrijsonFormat.readFeatures(_response, {
                                     featureProjection: _projection
                                 });
