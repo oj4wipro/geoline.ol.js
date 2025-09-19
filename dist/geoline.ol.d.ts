@@ -191,6 +191,25 @@ declare class StmaOpenLayers {
      * */
     _getConfig(): GeolineConfig;
     /**
+     * JSONP with simple Promise cache to avoid duplicate network requests per URL
+     * @param {string} url
+     * @returns {Promise<any>}
+     */
+    _jsonpCached(url: string): Promise<any>;
+    /**
+     * Fetch text with simple Promise cache by URL (POST by default)
+     * @param {string} url
+     * @param {RequestInit} [options]
+     * @returns {Promise<string>}
+     */
+    _fetchTextCached(url: string, options?: RequestInit): Promise<string>;
+    /**
+     * Get a cached GeoJSON format instance for a specific dataProjection.
+     * The instance is created with featureProjection set to the current map projection.
+     * @param {string} dataProjection
+     */
+    _getGeoJSONFormat(dataProjection: string): any;
+    /**
      * @description fügt einen EsriLayer hinzu. (gecacht + dynamisch)
      *
      * @param       {string} _url URL zum AGS-Dienst
